@@ -21,7 +21,7 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
     const size = grid.length;
     const wordLength = word.length;
     
-    // Check if word fits
+    // First check if the word fits within bounds
     for (let i = 0; i < wordLength; i++) {
         const newRow = row + (dRow * i);
         const newCol = col + (dCol * i);
@@ -30,12 +30,35 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
         if (newRow < 0 || newRow >= size || newCol < 0 || newCol >= size) {
             return false;
         }
+    }
+
+    // Now check if we can place the word
+    // We'll track positions we need to fill (where there isn't already a matching letter)
+    const positionsToFill = [];
+    
+    for (let i = 0; i < wordLength; i++) {
+        const newRow = row + (dRow * i);
+        const newCol = col + (dCol * i);
+        const currentCell = grid[newRow][newCol];
         
-        // Check if cell is empty or matches the letter
-        if (grid[newRow][newCol] !== '' && grid[newRow][newCol] !== word[i]) {
+        // If cell is empty or matches the letter we want to place, it's valid
+        if (currentCell === '' || currentCell === word[i]) {
+            if (currentCell === '') {
+                positionsToFill.push([newRow, newCol, word[i]]);
+            }
+            // If the letter matches, we don't need to do anything
+            continue;
+        } else {
+            // If there's a different letter here, we can't place the word
             return false;
         }
     }
+    
+    // If we get here, we can place the word
+    // Fill in all the new positions
+    positionsToFill.forEach(([r, c, letter]) => {
+        grid[r][c] = letter;
+    });
     
     return true;
 }
@@ -48,16 +71,21 @@ function placeWord(grid, word) {
         [1, -1],  [1, 0],  [1, 1]     // Down-left, Down, Down-right
     ];
     
-    // Try 50 random positions
-    for (let attempt = 0; attempt < 50; attempt++) {
+    // Try 100 random positions (increased from 50 for better chances)
+    for (let attempt = 0; attempt < 100; attempt++) {
         const row = Math.floor(Math.random() * size);
         const col = Math.floor(Math.random() * size);
         const direction = directions[Math.floor(Math.random() * directions.length)];
         
-        if (canPlaceWord(grid, word, row, col, direction[0], direction[1])) {
-            // Place the word
-            for (let i = 0; i < word.length; i++) {
-                grid[row + (direction[0] * i)][col + (direction[1] * i)] = word[i];
+        // Create a copy of the grid for this attempt
+        const gridCopy = grid.map(row => [...row]);
+        
+        if (canPlaceWord(gridCopy, word, row, col, direction[0], direction[1])) {
+            // If placement was successful, update the real grid
+            for (let i = 0; i < size; i++) {
+                for (let j = 0; j < size; j++) {
+                    grid[i][j] = gridCopy[i][j];
+                }
             }
             return true;
         }
@@ -67,12 +95,13 @@ function placeWord(grid, word) {
 }
 
 function generateWordSearch(words) {
+    // Sort words by length (longest first) to improve placement success
+    const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const grid = createEmptyGrid();
-    const size = grid.length;
     const placedWords = [];
     
     // Try to place each word
-    for (const word of words) {
+    for (const word of sortedWords) {
         if (placeWord(grid, word)) {
             placedWords.push(word);
         }
@@ -80,8 +109,8 @@ function generateWordSearch(words) {
     
     // Fill empty spaces with random letters
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    for (let i = 0; i < size; i++) {
-        for (let j = 0; j < size; j++) {
+    for (let i = 0; i < grid.length; i++) {
+        for (let j = 0; j < grid.length; j++) {
             if (grid[i][j] === '') {
                 grid[i][j] = alphabet[Math.floor(Math.random() * alphabet.length)];
             }
@@ -263,6 +292,7 @@ app.post('/api/generate', (req, res) => {
 app.post('/api/generate/auto', (req, res) => {
     try {
         const { words } = req.body;
+        const GRID_SIZE = 10;
         
         // Log incoming request
         console.log('Received auto-generate request:', {
@@ -286,9 +316,20 @@ app.post('/api/generate/auto', (req, res) => {
         if (!words.every(word => typeof word === 'string')) {
             return res.status(400).json({ error: "All words must be strings" });
         }
-        
-        // Process words and generate grid
+
+        // Process words and check lengths
         const processedWords = words.map(word => word.toUpperCase());
+        const tooLongWords = processedWords.filter(word => word.length > GRID_SIZE);
+        
+        if (tooLongWords.length > 0) {
+            return res.status(400).json({ 
+                error: "Some words are too long for the 10x10 grid",
+                maxLength: GRID_SIZE,
+                tooLongWords: tooLongWords
+            });
+        }
+        
+        // Generate the word search
         const { grid, placedWords } = generateWordSearch(processedWords);
         
         // Generate unique filename
