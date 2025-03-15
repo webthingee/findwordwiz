@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Generator</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center;
+            background-image: url('https://source.unsplash.com/1600x900/?puzzle');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .input-section, .output-section {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 300px;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(10, 40px); 
+            grid-template-rows: repeat(10, 40px);
+            justify-content: center; 
+            gap: 2px; 
+            margin: 20px auto;
+        }
+        .cell { 
+            width: 40px; 
+            height: 40px; 
+            border: 1px solid #444; 
+            text-align: center; 
+            font-size: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+        }
+        .json-input {
+            width: 100%;
+            height: 150px;
+            margin: 10px 0;
+            padding: 10px;
+            font-family: monospace;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid #444;
+            border-radius: 5px;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .clues {
+            text-align: left;
+            display: inline-block;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        .error {
+            color: #ff4444;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .sample-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 5px 0;
+        }
+        .sample {
+            font-size: 12px;
+            color: #aaa;
+            text-align: left;
+            flex-grow: 1;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .copy-button {
+            padding: 3px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            background-color: #444;
+            color: white;
+            border: none;
+            border-radius: 3px;
+        }
+        .copy-button:hover {
+            background-color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Search Generator</h1>
+    
+    <div class="container">
+        <div class="input-section">
+            <h2>Input Words (JSON Array)</h2>
+            <div class="sample-container">
+                <div class="sample" id="wordsExample">["REMOTE", "BINGE", "EPISODE", "STREAM", "SCREEN"]</div>
+                <button class="copy-button" onclick="copyExample('wordsExample')">Copy</button>
+            </div>
+            <textarea id="wordsJson" class="json-input" placeholder='Enter words as JSON array: ["WORD1", "WORD2", "WORD3"]'></textarea>
+            
+            <h2>Input Grid Letters (JSON Array)</h2>
+            <div class="sample-container">
+                <div class="sample" id="gridExample">["R","E","M","O","T","E","S","T","R","S","E","C","R","E","E","N","B","I","N","G","E","P","I","S","O","D","E","A","M","X","T","V","W","Z","Y","Q","L","K","J","H","G","F","D","S","A","P","O","I","U","Y","T","R","E","W","Q","L","K","J","H","G","F","D","S","A","M","N","B","V","C","X","Z","P","O","I","U","Y","T","R","E","W","Q","A","S","D","F","G","H","J","K","L","P","O","I","U","Y","T","R","E","W","Q"]</div>
+                <button class="copy-button" onclick="copyExample('gridExample')">Copy</button>
+            </div>
+            <textarea id="gridJson" class="json-input" placeholder='Enter 100 letters as JSON array: ["A","B","C",...]'></textarea>
+            
+            <div id="errorMessage" class="error"></div>
+            <button class="button" onclick="generateWordSearch()">Generate Word Search</button>
+        </div>
+        
+        <div class="output-section">
+            <h2>Generated Word Search</h2>
+            <div class="grid" id="wordsearch"></div>
+            <div class="clues">
+                <h3>Find these words:</h3>
+                <ul id="wordList"></ul>
+            </div>
+            <button class="button" onclick="window.print()">Print</button>
+        </div>
+    </div>
+
+    <script>
+        function copyExample(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const button = event.target;
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1000);
+            });
+        }
+
+        function validateInput(wordsJson, gridJson) {
+            try {
+                const words = JSON.parse(wordsJson);
+                const grid = JSON.parse(gridJson);
+                
+                if (!Array.isArray(words) || !Array.isArray(grid)) {
+                    return "Both inputs must be JSON arrays";
+                }
+                
+                if (grid.length !== 100) {
+                    return "Grid must contain exactly 100 letters";
+                }
+                
+                if (words.length === 0) {
+                    return "Please enter at least one word";
+                }
+                
+                if (words.length > 10) {
+                    return "Maximum 10 words allowed";
+                }
+                
+                if (!words.every(word => typeof word === 'string')) {
+                    return "All words must be strings";
+                }
+                
+                if (!grid.every(letter => typeof letter === 'string' && letter.length === 1)) {
+                    return "Grid must contain single letters";
+                }
+                
+                return null;
+            } catch (e) {
+                return "Invalid JSON format";
+            }
+        }
+
+        function generateWordSearch() {
+            const wordsJson = document.getElementById('wordsJson').value;
+            const gridJson = document.getElementById('gridJson').value;
+            const errorElement = document.getElementById('errorMessage');
+            
+            const error = validateInput(wordsJson, gridJson);
+            if (error) {
+                errorElement.textContent = error;
+                return;
+            }
+            errorElement.textContent = '';
+            
+            const words = JSON.parse(wordsJson);
+            const gridLetters = JSON.parse(gridJson);
+            
+            // Generate the word search display
+            const wordsearch = document.getElementById('wordsearch');
+            wordsearch.innerHTML = '';
+            
+            // Create the grid
+            for (let i = 0; i < 100; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.textContent = gridLetters[i].toUpperCase();
+                wordsearch.appendChild(cell);
+            }
+            
+            // Update the word list
+            const wordList = document.getElementById('wordList');
+            wordList.innerHTML = '';
+            words.forEach(word => {
+                const li = document.createElement('li');
+                li.textContent = word.toUpperCase();
+                wordList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html> 
