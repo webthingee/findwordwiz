@@ -189,7 +189,7 @@ function generatePuzzleHTML(words, grid, solutionUrl) {
         .replace('{{SOLUTION_URL}}', solutionUrl);
 }
 
-function generateSolutionHTML(words, grid, wordPositions) {
+function generateSolutionHTML(words, grid, wordPositions, puzzlePath, backgroundUrl = null) {
     const gridCells = grid.map((letter, i) => {
         const row = Math.floor(i / 10);
         const col = i % 10;
@@ -223,10 +223,19 @@ function generateSolutionHTML(words, grid, wordPositions) {
     
     const wordList = words.map(word => `<li>${word}</li>`).join('');
     
-    return templates.solution
+    let html = templates.solution
         .replace('{{GRID_CELLS}}', gridCells)
         .replace('{{WORD_LIST}}', wordList)
-        .replace('{{PUZZLE_URL}}', 'puzzle.html');
+        .replace('{{PUZZLE_URL}}', puzzlePath);
+    
+    if (backgroundUrl) {
+        html = html.replace(
+            'background-image: url(\'/images/test.jpg\');',
+            `background-image: url('${backgroundUrl}');`
+        );
+    }
+    
+    return html;
 }
 
 // API endpoint to generate word search
@@ -295,7 +304,7 @@ app.post('/api/generate', (req, res) => {
 
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl);
-        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, []);
+        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -411,9 +420,9 @@ app.post('/api/generate/auto', async (req, res) => {
         const puzzleUrl = `${baseUrl}${puzzlePath}`;
         const solutionUrl = `${baseUrl}${solutionPath}`;
 
-        // Generate and save both HTML files
+        // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
