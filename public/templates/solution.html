@@ -52,6 +52,20 @@
             background: rgba(0, 0, 0, 0.8);
             margin: 20px;
             color: white;
+            width: 300px;
+        }
+        .clues ul {
+            columns: 2;
+            -webkit-columns: 2;
+            -moz-columns: 2;
+            list-style-position: inside;
+            padding-left: 0;
+            margin: 0;
+        }
+        .clues li {
+            margin-bottom: 5px;
+            break-inside: avoid;
+            page-break-inside: avoid;
         }
         .button {
             padding: 10px 20px;
@@ -100,6 +114,5 @@
     </div>
     <button class="button no-print" onclick="window.print()">Print</button>
     <p class="no-print"><a href="{{PUZZLE_URL}}" style="color: #007BFF; text-decoration: none;">Back to Puzzle</a></p>
-    <p class="no-print"><a href="/" style="color: #007BFF; text-decoration: none;">Create another puzzle</a></p>
 </body>
 </html> 
