@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const { default: openBrowser } = require('open');
 const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || '0.0.0.0';
@@ -61,7 +60,13 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
         grid[r][c] = letter;
     });
     
-    return true;
+    // Return the word's position information
+    return {
+        success: true,
+        start: [row, col],
+        end: [row + (dRow * (wordLength - 1)), col + (dCol * (wordLength - 1))],
+        direction: [dRow, dCol]
+    };
 }
 
 function placeWord(grid, word) {
@@ -81,18 +86,27 @@ function placeWord(grid, word) {
         // Create a copy of the grid for this attempt
         const gridCopy = grid.map(row => [...row]);
         
-        if (canPlaceWord(gridCopy, word, row, col, direction[0], direction[1])) {
+        const result = canPlaceWord(gridCopy, word, row, col, direction[0], direction[1]);
+        if (result && result.success) {
             // If placement was successful, update the real grid
             for (let i = 0; i < size; i++) {
                 for (let j = 0; j < size; j++) {
                     grid[i][j] = gridCopy[i][j];
                 }
             }
-            return true;
+            return {
+                placed: true,
+                position: {
+                    word,
+                    start: result.start,
+                    end: result.end,
+                    direction: result.direction
+                }
+            };
         }
     }
     
-    return false;
+    return { placed: false };
 }
 
 function generateWordSearch(words) {
@@ -100,11 +114,14 @@ function generateWordSearch(words) {
     const sortedWords = [...words].sort((a, b) => b.length - a.length);
     const grid = createEmptyGrid();
     const placedWords = [];
+    const wordPositions = [];
     
     // Try to place each word
     for (const word of sortedWords) {
-        if (placeWord(grid, word)) {
+        const result = placeWord(grid, word);
+        if (result.placed) {
             placedWords.push(word);
+            wordPositions.push(result.position);
         }
     }
     
@@ -123,7 +140,8 @@ function generateWordSearch(words) {
     
     return {
         grid: flatGrid,
-        placedWords: placedWords
+        placedWords: placedWords,
+        wordPositions: wordPositions
     };
 }
 
@@ -141,67 +159,74 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
-function generateHTML(words, grid) {
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Search Puzzle</title>
-    <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center;
-            padding: 20px;
-        }
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(10, 40px); 
-            grid-template-rows: repeat(10, 40px);
-            justify-content: center; 
-            gap: 2px; 
-            margin: 20px auto;
-        }
-        .cell { 
-            width: 40px; 
-            height: 40px; 
-            border: 1px solid #444; 
-            text-align: center; 
-            font-size: 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-        }
-        .clues {
-            text-align: left;
-            display: inline-block;
-            padding: 10px;
-            border-radius: 8px;
-            background: #f5f5f5;
-            margin: 20px;
-        }
-        @media print {
-            .no-print {
-                display: none;
+// Function to read and cache templates
+const templates = {
+    puzzle: null,
+    solution: null
+};
+
+function loadTemplates() {
+    try {
+        templates.puzzle = fs.readFileSync(path.join(__dirname, 'public', 'templates', 'puzzle.html'), 'utf8');
+        templates.solution = fs.readFileSync(path.join(__dirname, 'public', 'templates', 'solution.html'), 'utf8');
+        console.log('Templates loaded successfully');
+    } catch (error) {
+        console.error('Error loading templates:', error);
+        process.exit(1);
+    }
+}
+
+// Load templates on startup
+loadTemplates();
+
+function generatePuzzleHTML(words, grid, solutionUrl) {
+    const gridCells = grid.map(letter => `<div class="cell">${letter}</div>`).join('');
+    const wordList = words.map(word => `<li>${word}</li>`).join('');
+    
+    return templates.puzzle
+        .replace('{{GRID_CELLS}}', gridCells)
+        .replace('{{WORD_LIST}}', wordList)
+        .replace('{{SOLUTION_URL}}', solutionUrl);
+}
+
+function generateSolutionHTML(words, grid, wordPositions) {
+    const gridCells = grid.map((letter, i) => {
+        const row = Math.floor(i / 10);
+        const col = i % 10;
+        let isHighlighted = false;
+        
+        // Check if this cell is part of any word
+        if (Array.isArray(wordPositions)) {
+            for (const pos of wordPositions) {
+                if (!pos || !pos.start || !pos.end || !pos.direction) continue;
+                
+                const { start, end, direction } = pos;
+                const wordLength = Math.max(
+                    Math.abs(end[0] - start[0]),
+                    Math.abs(end[1] - start[1])
+                ) + 1;
+                
+                // Check if current cell is part of this word
+                for (let step = 0; step < wordLength; step++) {
+                    const checkRow = start[0] + (direction[0] * step);
+                    const checkCol = start[1] + (direction[1] * step);
+                    if (checkRow === row && checkCol === col) {
+                        isHighlighted = true;
+                        break;
+                    }
+                }
             }
         }
-    </style>
-</head>
-<body>
-    <h1>Word Search Puzzle</h1>
-    <div class="grid">
-        ${grid.map(letter => `<div class="cell">${letter}</div>`).join('')}
-    </div>
-    <div class="clues">
-        <h3>Find these words:</h3>
-        <ul>
-            ${words.map(word => `<li>${word}</li>`).join('')}
-        </ul>
-    </div>
-    <button class="no-print" onclick="window.print()">Print</button>
-    <p class="no-print"><a href="/">Create another puzzle</a></p>
-</body>
-</html>`;
+        
+        return `<div class="cell${isHighlighted ? ' highlighted' : ''}">${letter}</div>`;
+    }).join('');
+    
+    const wordList = words.map(word => `<li>${word}</li>`).join('');
+    
+    return templates.solution
+        .replace('{{GRID_CELLS}}', gridCells)
+        .replace('{{WORD_LIST}}', wordList)
+        .replace('{{PUZZLE_URL}}', 'puzzle.html');
 }
 
 // API endpoint to generate word search
@@ -247,41 +272,56 @@ app.post('/api/generate', (req, res) => {
         const processedWords = words.map(word => word.toUpperCase());
         const processedGrid = grid.map(letter => letter.toUpperCase());
 
-        // Generate unique filename using date and time
+        // Generate unique base filename
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
             .replace('Z', '');
-        const filename = `puzzle_${timestamp}.html`;
-        const filepath = path.join(generatedDir, filename);
+        const baseFilename = `puzzle_${timestamp}`;
+        
+        // Generate both puzzle and solution files
+        const puzzleFilename = `${baseFilename}.html`;
+        const solutionFilename = `${baseFilename}_solution.html`;
+        
+        const puzzleFilepath = path.join(generatedDir, puzzleFilename);
+        const solutionFilepath = path.join(generatedDir, solutionFilename);
 
-        // Generate and save HTML file
-        const html = generateHTML(processedWords, processedGrid);
-        fs.writeFileSync(filepath, html);
-
-        // Create URLs for the generated puzzle
-        const puzzlePath = `/generated/${filename}`;
+        // Create URLs for both files
+        const puzzlePath = `/generated/${puzzleFilename}`;
+        const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const fullUrl = `${baseUrl}${puzzlePath}`;
+        const puzzleUrl = `${baseUrl}${puzzlePath}`;
+        const solutionUrl = `${baseUrl}${solutionPath}`;
+
+        // Generate and save both HTML files
+        const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl);
+        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, []);
+        
+        fs.writeFileSync(puzzleFilepath, puzzleHtml);
+        fs.writeFileSync(solutionFilepath, solutionHtml);
 
         // Open in browser if requested
         if (openInBrowser) {
-            openUrlInBrowser(fullUrl);
+            openUrlInBrowser(puzzleUrl);
         }
 
         // Log successful response
         console.log('Generated puzzle:', {
             timestamp: new Date().toISOString(),
-            filename,
-            url: fullUrl
+            puzzleFilename,
+            solutionFilename,
+            puzzleUrl,
+            solutionUrl
         });
 
-        // Return both the processed data and URLs
+        // Return both URLs
         return res.json({
             words: processedWords,
             grid: processedGrid,
             puzzleUrl: puzzlePath,
-            fullUrl: fullUrl
+            solutionUrl: solutionPath,
+            fullPuzzleUrl: puzzleUrl,
+            fullSolutionUrl: solutionUrl
         });
     } catch (error) {
         // Log error for debugging
@@ -297,7 +337,8 @@ app.post('/api/generate', (req, res) => {
 // Function to safely open URL in browser
 async function openUrlInBrowser(url) {
     try {
-        await openBrowser(url);
+        const open = await import('open');
+        await open.default(url);
         console.log('Opened in browser:', url);
     } catch (error) {
         console.error('Failed to open in browser:', error);
@@ -346,36 +387,49 @@ app.post('/api/generate/auto', async (req, res) => {
             });
         }
         
-        // Generate the word search
-        const { grid, placedWords } = generateWordSearch(processedWords);
+        // Generate the word search with positions
+        const { grid, placedWords, wordPositions } = generateWordSearch(processedWords);
         
-        // Generate unique filename
+        // Generate unique base filename
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
             .replace('Z', '');
-        const filename = `puzzle_${timestamp}.html`;
-        const filepath = path.join(generatedDir, filename);
+        const baseFilename = `puzzle_${timestamp}`;
+        
+        // Generate both puzzle and solution files
+        const puzzleFilename = `${baseFilename}.html`;
+        const solutionFilename = `${baseFilename}_solution.html`;
+        
+        const puzzleFilepath = path.join(generatedDir, puzzleFilename);
+        const solutionFilepath = path.join(generatedDir, solutionFilename);
 
-        // Generate and save HTML file
-        const html = generateHTML(placedWords, grid);
-        fs.writeFileSync(filepath, html);
-
-        // Create URLs for the generated puzzle
-        const puzzlePath = `/generated/${filename}`;
+        // Create URLs for both files
+        const puzzlePath = `/generated/${puzzleFilename}`;
+        const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const fullUrl = `${baseUrl}${puzzlePath}`;
+        const puzzleUrl = `${baseUrl}${puzzlePath}`;
+        const solutionUrl = `${baseUrl}${solutionPath}`;
+
+        // Generate and save both HTML files
+        const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions);
+        
+        fs.writeFileSync(puzzleFilepath, puzzleHtml);
+        fs.writeFileSync(solutionFilepath, solutionHtml);
 
         // Open in browser if requested
         if (openInBrowser) {
-            await openUrlInBrowser(fullUrl);
+            await openUrlInBrowser(puzzleUrl);
         }
 
         // Log successful response
         console.log('Generated auto puzzle:', {
             timestamp: new Date().toISOString(),
-            filename,
-            url: fullUrl,
+            puzzleFilename,
+            solutionFilename,
+            puzzleUrl,
+            solutionUrl,
             placedWords,
             openedInBrowser: openInBrowser
         });
@@ -385,7 +439,9 @@ app.post('/api/generate/auto', async (req, res) => {
             words: placedWords,
             grid: grid,
             puzzleUrl: puzzlePath,
-            fullUrl: fullUrl,
+            solutionUrl: solutionPath,
+            fullPuzzleUrl: puzzleUrl,
+            fullSolutionUrl: solutionUrl,
             notPlaced: processedWords.filter(w => !placedWords.includes(w))
         });
     } catch (error) {

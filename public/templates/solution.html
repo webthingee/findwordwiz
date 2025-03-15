@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Search Solution</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center;
+            background-image: url('/images/test.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(10, 40px); 
+            grid-template-rows: repeat(10, 40px);
+            justify-content: center; 
+            gap: 2px; 
+            margin: 20px auto;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+        }
+        .cell { 
+            width: 40px; 
+            height: 40px; 
+            border: 1px solid #444; 
+            text-align: center; 
+            font-size: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            color: black;
+        }
+        .cell.highlighted {
+            background-color: #ffeb3b;
+            font-weight: bold;
+        }
+        .clues {
+            text-align: left;
+            display: inline-block;
+            padding: 20px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            margin: 20px;
+            color: white;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin: 10px;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .clues {
+                background: white;
+                color: black;
+                border: 1px solid #444;
+            }
+            .cell.highlighted {
+                background-color: #ffeb3b !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Word Search Solution</h1>
+    <div class="grid">
+        {{GRID_CELLS}}
+    </div>
+    <div class="clues">
+        <h3>Found words:</h3>
+        <ul>
+            {{WORD_LIST}}
+        </ul>
+    </div>
+    <button class="button no-print" onclick="window.print()">Print</button>
+    <p class="no-print"><a href="{{PUZZLE_URL}}" style="color: #007BFF; text-decoration: none;">Back to Puzzle</a></p>
+    <p class="no-print"><a href="/" style="color: #007BFF; text-decoration: none;">Create another puzzle</a></p>
+</body>
+</html> 
