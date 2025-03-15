@@ -179,14 +179,23 @@ function loadTemplates() {
 // Load templates on startup
 loadTemplates();
 
-function generatePuzzleHTML(words, grid, solutionUrl) {
+function generatePuzzleHTML(words, grid, solutionUrl, backgroundUrl = null) {
     const gridCells = grid.map(letter => `<div class="cell">${letter}</div>`).join('');
     const wordList = words.map(word => `<li>${word}</li>`).join('');
     
-    return templates.puzzle
+    let html = templates.puzzle
         .replace('{{GRID_CELLS}}', gridCells)
         .replace('{{WORD_LIST}}', wordList)
         .replace('{{SOLUTION_URL}}', solutionUrl);
+    
+    if (backgroundUrl) {
+        html = html.replace(
+            /background-image: url\('[^']*'\);/,
+            `background-image: url('${backgroundUrl}');`
+        );
+    }
+    
+    return html;
 }
 
 function generateSolutionHTML(words, grid, wordPositions, puzzlePath, backgroundUrl = null) {
@@ -303,8 +312,8 @@ app.post('/api/generate', (req, res) => {
         const solutionUrl = `${baseUrl}${solutionPath}`;
 
         // Generate and save both HTML files
-        const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl);
-        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`);
+        const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
+        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`, null);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -357,14 +366,15 @@ async function openUrlInBrowser(url) {
 // New endpoint to generate word search from words only
 app.post('/api/generate/auto', async (req, res) => {
     try {
-        const { words, openInBrowser = false } = req.body;
+        const { words, openInBrowser = false, backgroundUrl = null } = req.body;
         const GRID_SIZE = 10;
         
         // Log incoming request
         console.log('Received auto-generate request:', {
             timestamp: new Date().toISOString(),
             words,
-            openInBrowser
+            openInBrowser,
+            backgroundUrl
         });
         
         // Validate input
@@ -421,8 +431,8 @@ app.post('/api/generate/auto', async (req, res) => {
         const solutionUrl = `${baseUrl}${solutionPath}`;
 
         // Generate and save both HTML files with background if provided
-        const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`);
+        const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
