@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TV Word Search</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            text-align: center;
+            background-image: url('https://source.unsplash.com/1600x900/?television');
+            background-size: cover;
+            background-position: center;
+            color: white;
+        }
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(10, 40px); 
+            grid-template-rows: repeat(10, 40px);
+            justify-content: center; 
+            gap: 2px; 
+        }
+        .cell { 
+            width: 40px; 
+            height: 40px; 
+            border: 1px solid black; 
+            text-align: center; 
+            font-size: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+        }
+        .clues { margin-top: 20px; text-align: left; display: inline-block; background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 8px; }
+        .print-button { 
+            margin-top: 20px; 
+            padding: 10px 20px; 
+            font-size: 16px; 
+            cursor: pointer; 
+            background-color: #007BFF; 
+            color: white; 
+            border: none; 
+            border-radius: 5px; 
+        }
+        .print-button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <h2>TV Word Search</h2>
+    <div class="grid" id="wordsearch"></div>
+    <div class="clues">
+        <h3>Find these words:</h3>
+        <ul>
+            <li>REMOTE</li>
+            <li>BINGE</li>
+            <li>EPISODE</li>
+            <li>STREAM</li>
+            <li>SCREEN</li>
+            <li>CHANNEL</li>
+            <li>ACTOR</li>
+            <li>BROADCAST</li>
+            <li>SERIES</li>
+            <li>SUBTITLE</li>
+        </ul>
+    </div>
+    <button class="print-button" onclick="window.print()">Print</button>
+    <script>
+        const gridData = [
+            "R S E P I S O D E N",
+            "E C R E M O T E X I",
+            "M T R B I N G E Y T",
+            "O R A S C R E E N V",
+            "T E C T O R A C T W",
+            "E H N N L A H C K X",
+            "S B R O A D C A S Z",
+            "T S U B T I T L E M",
+            "R S T R E A M X J O",
+            "E R I E S Y Z O W P"
+        ];
+
+        const grid = document.getElementById("wordsearch");
+        
+        for (let row of gridData) {
+            let rowArray = row.split(" ");
+            for (let letter of rowArray) {
+                const cell = document.createElement("div");
+                cell.className = "cell";
+                cell.textContent = letter;
+                grid.appendChild(cell);
+            }
+        }
+    </script>
+</body>
+</html>

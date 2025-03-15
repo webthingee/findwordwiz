@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { default: openBrowser } = require('open');
 const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || '0.0.0.0';
@@ -206,7 +207,7 @@ function generateHTML(words, grid) {
 // API endpoint to generate word search
 app.post('/api/generate', (req, res) => {
     try {
-        const { words, grid } = req.body;
+        const { words, grid, openInBrowser = false } = req.body;
         
         // Log incoming request for debugging
         console.log('Received request:', {
@@ -263,6 +264,11 @@ app.post('/api/generate', (req, res) => {
         const baseUrl = `http://${req.get('host')}`;
         const fullUrl = `${baseUrl}${puzzlePath}`;
 
+        // Open in browser if requested
+        if (openInBrowser) {
+            openUrlInBrowser(fullUrl);
+        }
+
         // Log successful response
         console.log('Generated puzzle:', {
             timestamp: new Date().toISOString(),
@@ -288,16 +294,27 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
-// New endpoint to generate word search from words only
-app.post('/api/generate/auto', (req, res) => {
+// Function to safely open URL in browser
+async function openUrlInBrowser(url) {
     try {
-        const { words } = req.body;
+        await openBrowser(url);
+        console.log('Opened in browser:', url);
+    } catch (error) {
+        console.error('Failed to open in browser:', error);
+    }
+}
+
+// New endpoint to generate word search from words only
+app.post('/api/generate/auto', async (req, res) => {
+    try {
+        const { words, openInBrowser = false } = req.body;
         const GRID_SIZE = 10;
         
         // Log incoming request
         console.log('Received auto-generate request:', {
             timestamp: new Date().toISOString(),
-            words
+            words,
+            openInBrowser
         });
         
         // Validate input
@@ -349,12 +366,18 @@ app.post('/api/generate/auto', (req, res) => {
         const baseUrl = `http://${req.get('host')}`;
         const fullUrl = `${baseUrl}${puzzlePath}`;
 
+        // Open in browser if requested
+        if (openInBrowser) {
+            await openUrlInBrowser(fullUrl);
+        }
+
         // Log successful response
         console.log('Generated auto puzzle:', {
             timestamp: new Date().toISOString(),
             filename,
             url: fullUrl,
-            placedWords
+            placedWords,
+            openedInBrowser: openInBrowser
         });
 
         // Return the response
@@ -371,7 +394,10 @@ app.post('/api/generate/auto', (req, res) => {
             error: error.message,
             stack: error.stack
         });
-        return res.status(400).json({ error: "Failed to generate word search" });
+        return res.status(500).json({ 
+            error: "Failed to generate word search",
+            details: error.message
+        });
     }
 });
 
