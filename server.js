@@ -199,13 +199,13 @@ function loadTemplates() {
 loadTemplates();
 
 function generatePuzzleHTML(words, grid, solutionUrl, backgroundUrl = null) {
-    const gridCells = grid.map(letter => "<div class=\"cell\">" + letter + "</div>").join('');
-    const wordList = words.map(word => "<li>" + word + "</li>").join('');
+    const gridCells = grid.map(letter => "<div class=\"cell\">" + letter + "</div>").join("");
+    const wordList = words.map(word => "<li>" + word + "</li>").join("");
     
     let html = templates.puzzle
-        .replace('{{GRID_CELLS}}', gridCells)
-        .replace('{{WORD_LIST}}', wordList)
-        .replace('{{SOLUTION_URL}}', solutionUrl);
+        .replace("{{GRID_CELLS}}", gridCells)
+        .replace("{{WORD_LIST}}", wordList)
+        .replace("{{SOLUTION_URL}}", solutionUrl);
     
     if (backgroundUrl) {
         html = html.replace(
@@ -247,18 +247,18 @@ function generateSolutionHTML(words, grid, wordPositions, puzzlePath, background
         }
         
         return "<div class=\"cell" + (isHighlighted ? " highlighted" : "") + "\">" + letter + "</div>";
-    }).join('');
+    }).join("");
     
-    const wordList = words.map(word => "<li>" + word + "</li>").join('');
+    const wordList = words.map(word => "<li>" + word + "</li>").join("");
     
     let html = templates.solution
-        .replace('{{GRID_CELLS}}', gridCells)
-        .replace('{{WORD_LIST}}', wordList)
-        .replace('{{PUZZLE_URL}}', puzzlePath);
+        .replace("{{GRID_CELLS}}", gridCells)
+        .replace("{{WORD_LIST}}", wordList)
+        .replace("{{PUZZLE_URL}}", puzzlePath);
     
     if (backgroundUrl) {
         html = html.replace(
-            'background-image: url(\'/images/test.jpg\');',
+            "background-image: url('/images/test.jpg');",
             "background-image: url('" + backgroundUrl + "');"
         );
     }
@@ -332,14 +332,15 @@ app.post('/api/generate', (req, res) => {
         const solutionUrl = cleanUrl(baseUrl + solutionPath);
 
         // Debug URL generation
-        cleanLog("URL Generation Debug:", {
+        const debugUrls = {
             host: req.get("host"),
             baseUrl: cleanUrl(baseUrl),
             puzzlePath: cleanUrl(puzzlePath),
             solutionPath: cleanUrl(solutionPath),
-            puzzleUrl,
-            solutionUrl
-        });
+            puzzleUrl: cleanUrl(puzzleUrl),
+            solutionUrl: cleanUrl(solutionUrl)
+        };
+        cleanLog("URL Generation Debug:", debugUrls);
 
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
@@ -354,22 +355,23 @@ app.post('/api/generate', (req, res) => {
         }
 
         // Log successful response
-        cleanLog('Generated puzzle:', {
+        const responseLog = {
             timestamp: new Date().toISOString(),
-            puzzleFilename,
-            solutionFilename,
-            puzzleUrl,
-            solutionUrl
-        });
+            puzzleFilename: String(puzzleFilename),
+            solutionFilename: String(solutionFilename),
+            puzzleUrl: String(cleanUrl(puzzleUrl)),
+            solutionUrl: String(cleanUrl(solutionUrl))
+        };
+        cleanLog("Generated puzzle:", responseLog);
 
         // Return both URLs
         return res.json({
             words: processedWords,
             grid: processedGrid,
-            puzzleUrl: cleanUrl(puzzlePath),
-            solutionUrl: cleanUrl(solutionPath),
-            fullPuzzleUrl: puzzleUrl,
-            fullSolutionUrl: solutionUrl
+            puzzleUrl: String(cleanUrl(puzzlePath)),
+            solutionUrl: String(cleanUrl(solutionPath)),
+            fullPuzzleUrl: String(cleanUrl(puzzleUrl)),
+            fullSolutionUrl: String(cleanUrl(solutionUrl))
         });
     } catch (error) {
         // Log error for debugging
@@ -462,14 +464,15 @@ app.post('/api/generate/auto', async (req, res) => {
         const solutionUrl = cleanUrl(baseUrl + solutionPath);
 
         // Debug URL generation
-        cleanLog("URL Generation Debug:", {
+        const autoDebugUrls = {
             host: req.get("host"),
             baseUrl: cleanUrl(baseUrl),
             puzzlePath: cleanUrl(puzzlePath),
             solutionPath: cleanUrl(solutionPath),
-            puzzleUrl,
-            solutionUrl
-        });
+            puzzleUrl: cleanUrl(puzzleUrl),
+            solutionUrl: cleanUrl(solutionUrl)
+        };
+        cleanLog("URL Generation Debug:", autoDebugUrls);
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
@@ -484,24 +487,25 @@ app.post('/api/generate/auto', async (req, res) => {
         }
 
         // Log successful response
-        cleanLog('Generated auto puzzle:', {
+        const autoResponseLog = {
             timestamp: new Date().toISOString(),
-            puzzleFilename,
-            solutionFilename,
-            puzzleUrl,
-            solutionUrl,
+            puzzleFilename: String(puzzleFilename),
+            solutionFilename: String(solutionFilename),
+            puzzleUrl: String(cleanUrl(puzzleUrl)),
+            solutionUrl: String(cleanUrl(solutionUrl)),
             placedWords,
             openedInBrowser: openInBrowser
-        });
+        };
+        cleanLog("Generated auto puzzle:", autoResponseLog);
 
         // Return the response
         return res.json({
             words: placedWords,
             grid: grid,
-            puzzleUrl: cleanUrl(puzzlePath),
-            solutionUrl: cleanUrl(solutionPath),
-            fullPuzzleUrl: puzzleUrl,
-            fullSolutionUrl: solutionUrl,
+            puzzleUrl: String(cleanUrl(puzzlePath)),
+            solutionUrl: String(cleanUrl(solutionPath)),
+            fullPuzzleUrl: String(cleanUrl(puzzleUrl)),
+            fullSolutionUrl: String(cleanUrl(solutionUrl)),
             notPlaced: processedWords.filter(w => !placedWords.includes(w))
         });
     } catch (error) {
@@ -535,18 +539,18 @@ app.get('/api/sample', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Unhandled error:', {
+    console.error("Unhandled error:", {
         timestamp: new Date().toISOString(),
         error: err.message,
         stack: err.stack
     });
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: "Internal server error" });
 });
 
 // Start server
 const server = app.listen(port, host, () => {
     console.log("Word Search API running at http://" + host + ":" + port);
-    console.log('Server configuration:', {
+    console.log("Server configuration:", {
         host,
         port,
         timestamp: new Date().toISOString()
@@ -554,8 +558,8 @@ const server = app.listen(port, host, () => {
 });
 
 // Handle server errors
-server.on('error', (error) => {
-    console.error('Server error:', {
+server.on("error", (error) => {
+    console.error("Server error:", {
         timestamp: new Date().toISOString(),
         error: error.message,
         stack: error.stack
@@ -563,10 +567,10 @@ server.on('error', (error) => {
 });
 
 // Handle process termination
-process.on('SIGTERM', () => {
-    console.log('SIGTERM received, shutting down gracefully');
+process.on("SIGTERM", () => {
+    console.log("SIGTERM received, shutting down gracefully");
     server.close(() => {
-        console.log('Server closed');
+        console.log("Server closed");
         process.exit(0);
     });
 });
