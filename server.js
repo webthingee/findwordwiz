@@ -2,29 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
-const util = require('util');
 const app = express();
 const port = process.env.PORT || 3000;
 const host = process.env.HOST || '0.0.0.0';
-
-// Configure logging
-const logConfig = { 
-    depth: null,
-    maxArrayLength: null,
-    breakLength: Infinity,
-    quoteStyle: 'none'
-};
-
-// Helper function for clean logging
-function cleanLog(message, obj) {
-    console.log(message, util.inspect(obj, logConfig));
-}
-
-// Helper function to clean URLs
-function cleanUrl(url) {
-    // Remove any kind of quotes and other unwanted characters
-    return url.replace(/['"`;\s]/g, '');
-}
 
 // Ensure generated directory exists
 const generatedDir = path.join(__dirname, 'public', 'generated');
@@ -200,18 +180,18 @@ function loadTemplates() {
 loadTemplates();
 
 function generatePuzzleHTML(words, grid, solutionUrl, backgroundUrl = null) {
-    const gridCells = grid.map(letter => "<div class=\"cell\">" + letter + "</div>").join("");
-    const wordList = words.map(word => "<li>" + word + "</li>").join("");
+    const gridCells = grid.map(letter => `<div class="cell">${letter}</div>`).join('');
+    const wordList = words.map(word => `<li>${word}</li>`).join('');
     
     let html = templates.puzzle
-        .replace("{{GRID_CELLS}}", gridCells)
-        .replace("{{WORD_LIST}}", wordList)
-        .replace("{{SOLUTION_URL}}", solutionUrl);
+        .replace('{{GRID_CELLS}}', gridCells)
+        .replace('{{WORD_LIST}}', wordList)
+        .replace('{{SOLUTION_URL}}', solutionUrl);
     
     if (backgroundUrl) {
         html = html.replace(
             /background-image: url\('[^']*'\);/,
-            "background-image: url('" + backgroundUrl + "');"
+            `background-image: url('${backgroundUrl}');`
         );
     }
     
@@ -247,20 +227,20 @@ function generateSolutionHTML(words, grid, wordPositions, puzzlePath, background
             }
         }
         
-        return "<div class=\"cell" + (isHighlighted ? " highlighted" : "") + "\">" + letter + "</div>";
-    }).join("");
+        return `<div class="cell${isHighlighted ? ' highlighted' : ''}">${letter}</div>`;
+    }).join('');
     
-    const wordList = words.map(word => "<li>" + word + "</li>").join("");
+    const wordList = words.map(word => `<li>${word}</li>`).join('');
     
     let html = templates.solution
-        .replace("{{GRID_CELLS}}", gridCells)
-        .replace("{{WORD_LIST}}", wordList)
-        .replace("{{PUZZLE_URL}}", puzzlePath);
+        .replace('{{GRID_CELLS}}', gridCells)
+        .replace('{{WORD_LIST}}', wordList)
+        .replace('{{PUZZLE_URL}}', puzzlePath);
     
     if (backgroundUrl) {
         html = html.replace(
-            "background-image: url('/images/test.jpg');",
-            "background-image: url('" + backgroundUrl + "');"
+            'background-image: url(\'/images/test.jpg\');',
+            `background-image: url('${backgroundUrl}');`
         );
     }
     
@@ -314,38 +294,36 @@ app.post('/api/generate', (req, res) => {
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
-            .replace('Z', '')
-            .replace(/[`'"]/g, '');
-        const baseFilename = "puzzle_" + timestamp;
+            .replace('Z', '');
+        const baseFilename = `puzzle_${timestamp}`;
         
         // Generate both puzzle and solution files
-        const puzzleFilename = baseFilename + ".html";
-        const solutionFilename = baseFilename + "_solution.html";
+        const puzzleFilename = `${baseFilename}.html`;
+        const solutionFilename = `${baseFilename}_solution.html`;
         
         const puzzleFilepath = path.join(generatedDir, puzzleFilename);
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = "/generated/" + puzzleFilename;
-        const solutionPath = "/generated/" + solutionFilename;
-        const baseUrl = "http://" + req.get("host");
-        const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
-        const solutionUrl = cleanUrl(baseUrl + solutionPath);
+        const puzzlePath = `/generated/${puzzleFilename}`;
+        const solutionPath = `/generated/${solutionFilename}`;
+        const baseUrl = `http://${req.get('host')}`;
+        const puzzleUrl = `${baseUrl}${puzzlePath}`;
+        const solutionUrl = `${baseUrl}${solutionPath}`;
 
         // Debug URL generation
-        const debugUrls = {
-            host: req.get("host"),
-            baseUrl: cleanUrl(baseUrl),
-            puzzlePath: cleanUrl(puzzlePath),
-            solutionPath: cleanUrl(solutionPath),
-            puzzleUrl: cleanUrl(puzzleUrl),
-            solutionUrl: cleanUrl(solutionUrl)
-        };
-        cleanLog("URL Generation Debug:", debugUrls);
+        console.log('URL Generation Debug:', JSON.stringify({
+            host: req.get('host'),
+            baseUrl,
+            puzzlePath,
+            solutionPath,
+            puzzleUrl,
+            solutionUrl
+        }));
 
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
-        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], ".." + puzzlePath, null);
+        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`, null);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -356,23 +334,22 @@ app.post('/api/generate', (req, res) => {
         }
 
         // Log successful response
-        const responseLog = {
+        console.log('Generated puzzle:', JSON.stringify({
             timestamp: new Date().toISOString(),
-            puzzleFilename: String(puzzleFilename),
-            solutionFilename: String(solutionFilename),
-            puzzleUrl: String(cleanUrl(puzzleUrl)),
-            solutionUrl: String(cleanUrl(solutionUrl))
-        };
-        cleanLog("Generated puzzle:", responseLog);
+            puzzleFilename,
+            solutionFilename,
+            puzzleUrl,
+            solutionUrl
+        }));
 
         // Return both URLs
         return res.json({
             words: processedWords,
             grid: processedGrid,
-            puzzleUrl: String(cleanUrl(puzzlePath)),
-            solutionUrl: String(cleanUrl(solutionPath)),
-            fullPuzzleUrl: String(cleanUrl(puzzleUrl)),
-            fullSolutionUrl: String(cleanUrl(solutionUrl))
+            puzzleUrl: puzzlePath,
+            solutionUrl: solutionPath,
+            fullPuzzleUrl: puzzleUrl,
+            fullSolutionUrl: solutionUrl
         });
     } catch (error) {
         // Log error for debugging
@@ -446,38 +423,36 @@ app.post('/api/generate/auto', async (req, res) => {
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
-            .replace('Z', '')
-            .replace(/[`'"]/g, '');
-        const baseFilename = "puzzle_" + timestamp;
+            .replace('Z', '');
+        const baseFilename = `puzzle_${timestamp}`;
         
         // Generate both puzzle and solution files
-        const puzzleFilename = baseFilename + ".html";
-        const solutionFilename = baseFilename + "_solution.html";
+        const puzzleFilename = `${baseFilename}.html`;
+        const solutionFilename = `${baseFilename}_solution.html`;
         
         const puzzleFilepath = path.join(generatedDir, puzzleFilename);
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = "/generated/" + puzzleFilename;
-        const solutionPath = "/generated/" + solutionFilename;
-        const baseUrl = "http://" + req.get("host");
-        const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
-        const solutionUrl = cleanUrl(baseUrl + solutionPath);
+        const puzzlePath = `/generated/${puzzleFilename}`;
+        const solutionPath = `/generated/${solutionFilename}`;
+        const baseUrl = `http://${req.get('host')}`;
+        const puzzleUrl = `${baseUrl}${puzzlePath}`;
+        const solutionUrl = `${baseUrl}${solutionPath}`;
 
         // Debug URL generation
-        const autoDebugUrls = {
-            host: req.get("host"),
-            baseUrl: cleanUrl(baseUrl),
-            puzzlePath: cleanUrl(puzzlePath),
-            solutionPath: cleanUrl(solutionPath),
-            puzzleUrl: cleanUrl(puzzleUrl),
-            solutionUrl: cleanUrl(solutionUrl)
-        };
-        cleanLog("URL Generation Debug:", autoDebugUrls);
+        console.log('URL Generation Debug:', JSON.stringify({
+            host: req.get('host'),
+            baseUrl,
+            puzzlePath,
+            solutionPath,
+            puzzleUrl,
+            solutionUrl
+        }));
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, ".." + puzzlePath, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -488,25 +463,24 @@ app.post('/api/generate/auto', async (req, res) => {
         }
 
         // Log successful response
-        const autoResponseLog = {
+        console.log('Generated auto puzzle:', JSON.stringify({
             timestamp: new Date().toISOString(),
-            puzzleFilename: String(puzzleFilename),
-            solutionFilename: String(solutionFilename),
-            puzzleUrl: String(cleanUrl(puzzleUrl)),
-            solutionUrl: String(cleanUrl(solutionUrl)),
+            puzzleFilename,
+            solutionFilename,
+            puzzleUrl,
+            solutionUrl,
             placedWords,
             openedInBrowser: openInBrowser
-        };
-        cleanLog("Generated auto puzzle:", autoResponseLog);
+        }));
 
         // Return the response
         return res.json({
             words: placedWords,
             grid: grid,
-            puzzleUrl: String(cleanUrl(puzzlePath)),
-            solutionUrl: String(cleanUrl(solutionPath)),
-            fullPuzzleUrl: String(cleanUrl(puzzleUrl)),
-            fullSolutionUrl: String(cleanUrl(solutionUrl)),
+            puzzleUrl: puzzlePath,
+            solutionUrl: solutionPath,
+            fullPuzzleUrl: puzzleUrl,
+            fullSolutionUrl: solutionUrl,
             notPlaced: processedWords.filter(w => !placedWords.includes(w))
         });
     } catch (error) {
@@ -540,18 +514,18 @@ app.get('/api/sample', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error("Unhandled error:", {
+    console.error('Unhandled error:', {
         timestamp: new Date().toISOString(),
         error: err.message,
         stack: err.stack
     });
-    res.status(500).json({ error: "Internal server error" });
+    res.status(500).json({ error: 'Internal server error' });
 });
 
 // Start server
 const server = app.listen(port, host, () => {
-    console.log("Word Search API running at http://" + host + ":" + port);
-    console.log("Server configuration:", {
+    console.log(`Word Search API running at http://${host}:${port}`);
+    console.log('Server configuration:', {
         host,
         port,
         timestamp: new Date().toISOString()
@@ -559,8 +533,8 @@ const server = app.listen(port, host, () => {
 });
 
 // Handle server errors
-server.on("error", (error) => {
-    console.error("Server error:", {
+server.on('error', (error) => {
+    console.error('Server error:', {
         timestamp: new Date().toISOString(),
         error: error.message,
         stack: error.stack
@@ -568,10 +542,10 @@ server.on("error", (error) => {
 });
 
 // Handle process termination
-process.on("SIGTERM", () => {
-    console.log("SIGTERM received, shutting down gracefully");
+process.on('SIGTERM', () => {
+    console.log('SIGTERM received, shutting down gracefully');
     server.close(() => {
-        console.log("Server closed");
+        console.log('Server closed');
         process.exit(0);
     });
 });
