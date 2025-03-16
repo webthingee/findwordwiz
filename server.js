@@ -311,6 +311,16 @@ app.post('/api/generate', (req, res) => {
         const puzzleUrl = `${baseUrl}${puzzlePath}`;
         const solutionUrl = `${baseUrl}${solutionPath}`;
 
+        // Debug URL generation
+        console.log('URL Generation Debug:', JSON.stringify({
+            host: req.get('host'),
+            baseUrl,
+            puzzlePath,
+            solutionPath,
+            puzzleUrl,
+            solutionUrl
+        }));
+
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
         const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`, null);
@@ -324,13 +334,13 @@ app.post('/api/generate', (req, res) => {
         }
 
         // Log successful response
-        console.log('Generated puzzle:', {
+        console.log('Generated puzzle:', JSON.stringify({
             timestamp: new Date().toISOString(),
             puzzleFilename,
             solutionFilename,
             puzzleUrl,
             solutionUrl
-        });
+        }));
 
         // Return both URLs
         return res.json({
@@ -430,6 +440,16 @@ app.post('/api/generate/auto', async (req, res) => {
         const puzzleUrl = `${baseUrl}${puzzlePath}`;
         const solutionUrl = `${baseUrl}${solutionPath}`;
 
+        // Debug URL generation
+        console.log('URL Generation Debug:', JSON.stringify({
+            host: req.get('host'),
+            baseUrl,
+            puzzlePath,
+            solutionPath,
+            puzzleUrl,
+            solutionUrl
+        }));
+
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
         const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
@@ -443,7 +463,7 @@ app.post('/api/generate/auto', async (req, res) => {
         }
 
         // Log successful response
-        console.log('Generated auto puzzle:', {
+        console.log('Generated auto puzzle:', JSON.stringify({
             timestamp: new Date().toISOString(),
             puzzleFilename,
             solutionFilename,
@@ -451,7 +471,7 @@ app.post('/api/generate/auto', async (req, res) => {
             solutionUrl,
             placedWords,
             openedInBrowser: openInBrowser
-        });
+        }));
 
         // Return the response
         return res.json({
