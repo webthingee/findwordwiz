@@ -310,8 +310,8 @@ app.post('/api/generate', (req, res) => {
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = `/generated/${puzzleFilename}`;
-        const solutionPath = `/generated/${solutionFilename}`;
+        const puzzlePath = `/generated/${encodeURIComponent(puzzleFilename)}`;
+        const solutionPath = `/generated/${encodeURIComponent(solutionFilename)}`;
         const baseUrl = `http://${req.get('host')}`;
         const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
         const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
@@ -320,10 +320,10 @@ app.post('/api/generate', (req, res) => {
         const debugUrls = {
             host: req.get('host'),
             baseUrl: cleanUrl(baseUrl),
-            puzzlePath,
-            solutionPath,
-            puzzleUrl,
-            solutionUrl
+            puzzlePath: encodeURI(puzzlePath),
+            solutionPath: encodeURI(solutionPath),
+            puzzleUrl: encodeURI(puzzleUrl),
+            solutionUrl: encodeURI(solutionUrl)
         };
         console.log('URL Generation Debug:', JSON.stringify(debugUrls));
 
@@ -440,8 +440,8 @@ app.post('/api/generate/auto', async (req, res) => {
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = `/generated/${puzzleFilename}`;
-        const solutionPath = `/generated/${solutionFilename}`;
+        const puzzlePath = `/generated/${encodeURIComponent(puzzleFilename)}`;
+        const solutionPath = `/generated/${encodeURIComponent(solutionFilename)}`;
         const baseUrl = `http://${req.get('host')}`;
         const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
         const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
@@ -450,10 +450,10 @@ app.post('/api/generate/auto', async (req, res) => {
         const debugUrls = {
             host: req.get('host'),
             baseUrl: cleanUrl(baseUrl),
-            puzzlePath,
-            solutionPath,
-            puzzleUrl,
-            solutionUrl
+            puzzlePath: encodeURI(puzzlePath),
+            solutionPath: encodeURI(solutionPath),
+            puzzleUrl: encodeURI(puzzleUrl),
+            solutionUrl: encodeURI(solutionUrl)
         };
         console.log('URL Generation Debug:', JSON.stringify(debugUrls));
 
@@ -477,7 +477,7 @@ app.post('/api/generate/auto', async (req, res) => {
             puzzleUrl,
             solutionUrl,
             placedWords,
-            openedInBrowser: openInBrowser
+            openedInBrowser: Boolean(openInBrowser)
         }));
 
         // Return the response
