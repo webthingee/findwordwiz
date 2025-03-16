@@ -247,6 +247,11 @@ function generateSolutionHTML(words, grid, wordPositions, puzzlePath, background
     return html;
 }
 
+// Helper function to clean URLs
+function cleanUrl(url) {
+    return url.replace(/;/g, '');
+}
+
 // API endpoint to generate word search
 app.post('/api/generate', (req, res) => {
     try {
@@ -308,13 +313,13 @@ app.post('/api/generate', (req, res) => {
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = `${baseUrl}${puzzlePath}`;
-        const solutionUrl = `${baseUrl}${solutionPath}`;
+        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
+        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
         console.log('URL Generation Debug:', JSON.stringify({
             host: req.get('host'),
-            baseUrl,
+            baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
@@ -437,13 +442,13 @@ app.post('/api/generate/auto', async (req, res) => {
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = `${baseUrl}${puzzlePath}`;
-        const solutionUrl = `${baseUrl}${solutionPath}`;
+        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
+        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
         console.log('URL Generation Debug:', JSON.stringify({
             host: req.get('host'),
-            baseUrl,
+            baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
