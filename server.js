@@ -19,6 +19,11 @@ function cleanLog(message, obj) {
     console.log(message, util.inspect(obj, logConfig));
 }
 
+// Helper function to clean URLs
+function cleanUrl(url) {
+    return url.replace(/[';]/g, '').trim();
+}
+
 // Ensure generated directory exists
 const generatedDir = path.join(__dirname, 'public', 'generated');
 if (!fs.existsSync(generatedDir)) {
@@ -321,13 +326,13 @@ app.post('/api/generate', (req, res) => {
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = `${baseUrl}${puzzlePath}`.trim();
-        const solutionUrl = `${baseUrl}${solutionPath}`.trim();
+        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
+        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
         cleanLog('URL Generation Debug:', {
             host: req.get('host'),
-            baseUrl,
+            baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
@@ -359,8 +364,8 @@ app.post('/api/generate', (req, res) => {
         return res.json({
             words: processedWords,
             grid: processedGrid,
-            puzzleUrl: puzzlePath,
-            solutionUrl: solutionPath,
+            puzzleUrl: cleanUrl(puzzlePath),
+            solutionUrl: cleanUrl(solutionPath),
             fullPuzzleUrl: puzzleUrl,
             fullSolutionUrl: solutionUrl
         });
@@ -450,13 +455,13 @@ app.post('/api/generate/auto', async (req, res) => {
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
         const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = `${baseUrl}${puzzlePath}`.trim();
-        const solutionUrl = `${baseUrl}${solutionPath}`.trim();
+        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
+        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
         cleanLog('URL Generation Debug:', {
             host: req.get('host'),
-            baseUrl,
+            baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
@@ -490,8 +495,8 @@ app.post('/api/generate/auto', async (req, res) => {
         return res.json({
             words: placedWords,
             grid: grid,
-            puzzleUrl: puzzlePath,
-            solutionUrl: solutionPath,
+            puzzleUrl: cleanUrl(puzzlePath),
+            solutionUrl: cleanUrl(solutionPath),
             fullPuzzleUrl: puzzleUrl,
             fullSolutionUrl: solutionUrl,
             notPlaced: processedWords.filter(w => !placedWords.includes(w))
