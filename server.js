@@ -366,55 +366,113 @@ async function openUrlInBrowser(url) {
 // New endpoint to generate word search from words only
 app.post('/api/generate/auto', async (req, res) => {
     try {
-        const words = req.body.words || [];
-        const backgroundUrl = req.body.backgroundUrl;
+        const { words, openInBrowser = false, backgroundUrl = null } = req.body;
+        const GRID_SIZE = 10;
         
-        if (!Array.isArray(words) || words.length === 0) {
-            return res.status(400).json({ error: 'Words array is required' });
+        // Log incoming request
+        console.log('Received auto-generate request:', {
+            timestamp: new Date().toISOString(),
+            words,
+            openInBrowser,
+            backgroundUrl
+        });
+        
+        // Validate input
+        if (!Array.isArray(words)) {
+            return res.status(400).json({ error: "Words must be an array" });
         }
         
-        // Convert words to uppercase
-        const upperWords = words.map(word => word.toUpperCase());
+        if (words.length === 0) {
+            return res.status(400).json({ error: "Please enter at least one word" });
+        }
         
-        // Generate the word search
-        const { grid, placedWords, wordPositions } = generateWordSearch(upperWords);
+        if (words.length > 10) {
+            return res.status(400).json({ error: "Maximum 10 words allowed" });
+        }
         
-        // Generate unique filename based on timestamp
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const puzzleFilename = `puzzle_${timestamp}.html`;
-        const solutionFilename = `puzzle_${timestamp}_solution.html`;
+        if (!words.every(word => typeof word === 'string')) {
+            return res.status(400).json({ error: "All words must be strings" });
+        }
+
+        // Process words and check lengths
+        const processedWords = words.map(word => word.toUpperCase());
+        const tooLongWords = processedWords.filter(word => word.length > GRID_SIZE);
         
-        // Get the base URL from the request
-        const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-        const baseUrl = `${protocol}://${req.get('host')}`;
+        if (tooLongWords.length > 0) {
+            return res.status(400).json({ 
+                error: "Some words are too long for the 10x10 grid",
+                maxLength: GRID_SIZE,
+                tooLongWords: tooLongWords
+            });
+        }
         
-        // Generate relative and full URLs
+        // Generate the word search with positions
+        const { grid, placedWords, wordPositions } = generateWordSearch(processedWords);
+        
+        // Generate unique base filename
+        const timestamp = new Date().toISOString()
+            .replace(/[:.]/g, '-')
+            .replace('T', '_')
+            .replace('Z', '');
+        const baseFilename = `puzzle_${timestamp}`;
+        
+        // Generate both puzzle and solution files
+        const puzzleFilename = `${baseFilename}.html`;
+        const solutionFilename = `${baseFilename}_solution.html`;
+        
+        const puzzleFilepath = path.join(generatedDir, puzzleFilename);
+        const solutionFilepath = path.join(generatedDir, solutionFilename);
+
+        // Create URLs for both files
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
-        const fullPuzzleUrl = `${baseUrl}${puzzlePath}`;
-        const fullSolutionUrl = `${baseUrl}${solutionPath}`;
+        const baseUrl = `http://${req.get('host')}`;
+        const puzzleUrl = `${baseUrl}${puzzlePath}`;
+        const solutionUrl = `${baseUrl}${solutionPath}`;
+
+        // Generate and save both HTML files with background if provided
+        const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
         
-        // Generate HTML content
-        const puzzleHTML = generatePuzzleHTML(placedWords, grid, solutionPath, backgroundUrl);
-        const solutionHTML = generateSolutionHTML(placedWords, grid, wordPositions, puzzlePath, backgroundUrl);
-        
-        // Write files
-        fs.writeFileSync(path.join(generatedDir, puzzleFilename), puzzleHTML);
-        fs.writeFileSync(path.join(generatedDir, solutionFilename), solutionHTML);
-        
+        fs.writeFileSync(puzzleFilepath, puzzleHtml);
+        fs.writeFileSync(solutionFilepath, solutionHtml);
+
+        // Open in browser if requested
+        if (openInBrowser) {
+            await openUrlInBrowser(puzzleUrl);
+        }
+
+        // Log successful response
+        console.log('Generated auto puzzle:', {
+            timestamp: new Date().toISOString(),
+            puzzleFilename,
+            solutionFilename,
+            puzzleUrl,
+            solutionUrl,
+            placedWords,
+            openedInBrowser: openInBrowser
+        });
+
         // Return the response
-        res.json({
+        return res.json({
             words: placedWords,
             grid: grid,
             puzzleUrl: puzzlePath,
             solutionUrl: solutionPath,
-            fullPuzzleUrl: fullPuzzleUrl,
-            fullSolutionUrl: fullSolutionUrl,
-            notPlaced: words.filter(w => !placedWords.includes(w.toUpperCase()))
+            fullPuzzleUrl: puzzleUrl,
+            fullSolutionUrl: solutionUrl,
+            notPlaced: processedWords.filter(w => !placedWords.includes(w))
         });
     } catch (error) {
-        console.error('Error generating word search:', error);
-        res.status(500).json({ error: 'Failed to generate word search' });
+        console.error('Error in auto-generate:', {
+            timestamp: new Date().toISOString(),
+            error: error.message,
+            stack: error.stack
+        });
+        return res.status(500).json({ 
+            error: "Failed to generate word search",
+            details: error.message
+        });
     }
 });
 
