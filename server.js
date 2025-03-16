@@ -21,7 +21,8 @@ function cleanLog(message, obj) {
 
 // Helper function to clean URLs
 function cleanUrl(url) {
-    return url.replace(/[';]/g, '').trim();
+    // Remove any kind of quotes and other unwanted characters
+    return url.replace(/['"`;\s]/g, '');
 }
 
 // Ensure generated directory exists
@@ -325,16 +326,16 @@ app.post('/api/generate', (req, res) => {
         // Create URLs for both files
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
-        const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
-        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
+        const baseUrl = "http://" + req.get("host");
+        const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
+        const solutionUrl = cleanUrl(baseUrl + solutionPath);
 
         // Debug URL generation
-        cleanLog('URL Generation Debug:', {
-            host: req.get('host'),
+        cleanLog("URL Generation Debug:", {
+            host: req.get("host"),
             baseUrl: cleanUrl(baseUrl),
-            puzzlePath,
-            solutionPath,
+            puzzlePath: cleanUrl(puzzlePath),
+            solutionPath: cleanUrl(solutionPath),
             puzzleUrl,
             solutionUrl
         });
@@ -454,16 +455,16 @@ app.post('/api/generate/auto', async (req, res) => {
         // Create URLs for both files
         const puzzlePath = `/generated/${puzzleFilename}`;
         const solutionPath = `/generated/${solutionFilename}`;
-        const baseUrl = `http://${req.get('host')}`;
-        const puzzleUrl = cleanUrl(`${baseUrl}${puzzlePath}`);
-        const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
+        const baseUrl = "http://" + req.get("host");
+        const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
+        const solutionUrl = cleanUrl(baseUrl + solutionPath);
 
         // Debug URL generation
-        cleanLog('URL Generation Debug:', {
-            host: req.get('host'),
+        cleanLog("URL Generation Debug:", {
+            host: req.get("host"),
             baseUrl: cleanUrl(baseUrl),
-            puzzlePath,
-            solutionPath,
+            puzzlePath: cleanUrl(puzzlePath),
+            solutionPath: cleanUrl(solutionPath),
             puzzleUrl,
             solutionUrl
         });
