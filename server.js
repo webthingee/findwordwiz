@@ -317,14 +317,15 @@ app.post('/api/generate', (req, res) => {
         const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
-        console.log('URL Generation Debug:', JSON.stringify({
+        const debugUrls = {
             host: req.get('host'),
             baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
             solutionUrl
-        }));
+        };
+        console.log('URL Generation Debug:', JSON.stringify(debugUrls));
 
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
@@ -446,14 +447,15 @@ app.post('/api/generate/auto', async (req, res) => {
         const solutionUrl = cleanUrl(`${baseUrl}${solutionPath}`);
 
         // Debug URL generation
-        console.log('URL Generation Debug:', JSON.stringify({
+        const debugUrls = {
             host: req.get('host'),
             baseUrl: cleanUrl(baseUrl),
             puzzlePath,
             solutionPath,
             puzzleUrl,
             solutionUrl
-        }));
+        };
+        console.log('URL Generation Debug:', JSON.stringify(debugUrls));
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
