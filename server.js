@@ -199,8 +199,8 @@ function loadTemplates() {
 loadTemplates();
 
 function generatePuzzleHTML(words, grid, solutionUrl, backgroundUrl = null) {
-    const gridCells = grid.map(letter => `<div class="cell">${letter}</div>`).join('');
-    const wordList = words.map(word => `<li>${word}</li>`).join('');
+    const gridCells = grid.map(letter => "<div class=\"cell\">" + letter + "</div>").join('');
+    const wordList = words.map(word => "<li>" + word + "</li>").join('');
     
     let html = templates.puzzle
         .replace('{{GRID_CELLS}}', gridCells)
@@ -210,7 +210,7 @@ function generatePuzzleHTML(words, grid, solutionUrl, backgroundUrl = null) {
     if (backgroundUrl) {
         html = html.replace(
             /background-image: url\('[^']*'\);/,
-            `background-image: url('${backgroundUrl}');`
+            "background-image: url('" + backgroundUrl + "');"
         );
     }
     
@@ -246,10 +246,10 @@ function generateSolutionHTML(words, grid, wordPositions, puzzlePath, background
             }
         }
         
-        return `<div class="cell${isHighlighted ? ' highlighted' : ''}">${letter}</div>`;
+        return "<div class=\"cell" + (isHighlighted ? " highlighted" : "") + "\">" + letter + "</div>";
     }).join('');
     
-    const wordList = words.map(word => `<li>${word}</li>`).join('');
+    const wordList = words.map(word => "<li>" + word + "</li>").join('');
     
     let html = templates.solution
         .replace('{{GRID_CELLS}}', gridCells)
@@ -259,7 +259,7 @@ function generateSolutionHTML(words, grid, wordPositions, puzzlePath, background
     if (backgroundUrl) {
         html = html.replace(
             'background-image: url(\'/images/test.jpg\');',
-            `background-image: url('${backgroundUrl}');`
+            "background-image: url('" + backgroundUrl + "');"
         );
     }
     
@@ -313,19 +313,20 @@ app.post('/api/generate', (req, res) => {
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
-            .replace('Z', '');
-        const baseFilename = `puzzle_${timestamp}`;
+            .replace('Z', '')
+            .replace(/[`'"]/g, '');
+        const baseFilename = "puzzle_" + timestamp;
         
         // Generate both puzzle and solution files
-        const puzzleFilename = `${baseFilename}.html`;
-        const solutionFilename = `${baseFilename}_solution.html`;
+        const puzzleFilename = baseFilename + ".html";
+        const solutionFilename = baseFilename + "_solution.html";
         
         const puzzleFilepath = path.join(generatedDir, puzzleFilename);
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = `/generated/${puzzleFilename}`;
-        const solutionPath = `/generated/${solutionFilename}`;
+        const puzzlePath = "/generated/" + puzzleFilename;
+        const solutionPath = "/generated/" + solutionFilename;
         const baseUrl = "http://" + req.get("host");
         const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
         const solutionUrl = cleanUrl(baseUrl + solutionPath);
@@ -342,7 +343,7 @@ app.post('/api/generate', (req, res) => {
 
         // Generate and save both HTML files
         const puzzleHtml = generatePuzzleHTML(processedWords, processedGrid, solutionUrl, null);
-        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], `..${puzzlePath}`, null);
+        const solutionHtml = generateSolutionHTML(processedWords, processedGrid, [], ".." + puzzlePath, null);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -442,19 +443,20 @@ app.post('/api/generate/auto', async (req, res) => {
         const timestamp = new Date().toISOString()
             .replace(/[:.]/g, '-')
             .replace('T', '_')
-            .replace('Z', '');
-        const baseFilename = `puzzle_${timestamp}`;
+            .replace('Z', '')
+            .replace(/[`'"]/g, '');
+        const baseFilename = "puzzle_" + timestamp;
         
         // Generate both puzzle and solution files
-        const puzzleFilename = `${baseFilename}.html`;
-        const solutionFilename = `${baseFilename}_solution.html`;
+        const puzzleFilename = baseFilename + ".html";
+        const solutionFilename = baseFilename + "_solution.html";
         
         const puzzleFilepath = path.join(generatedDir, puzzleFilename);
         const solutionFilepath = path.join(generatedDir, solutionFilename);
 
         // Create URLs for both files
-        const puzzlePath = `/generated/${puzzleFilename}`;
-        const solutionPath = `/generated/${solutionFilename}`;
+        const puzzlePath = "/generated/" + puzzleFilename;
+        const solutionPath = "/generated/" + solutionFilename;
         const baseUrl = "http://" + req.get("host");
         const puzzleUrl = cleanUrl(baseUrl + puzzlePath);
         const solutionUrl = cleanUrl(baseUrl + solutionPath);
@@ -471,7 +473,7 @@ app.post('/api/generate/auto', async (req, res) => {
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, ".." + puzzlePath, backgroundUrl);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
@@ -543,7 +545,7 @@ app.use((err, req, res, next) => {
 
 // Start server
 const server = app.listen(port, host, () => {
-    console.log(`Word Search API running at http://${host}:${port}`);
+    console.log("Word Search API running at http://" + host + ":" + port);
     console.log('Server configuration:', {
         host,
         port,
