@@ -11,7 +11,8 @@ const host = process.env.HOST || '0.0.0.0';
 const logConfig = { 
     depth: null,
     maxArrayLength: null,
-    breakLength: Infinity
+    breakLength: Infinity,
+    quoteStyle: 'none'
 };
 
 // Helper function for clean logging
