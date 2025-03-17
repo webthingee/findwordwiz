@@ -406,7 +406,7 @@ app.post('/api/generate/auto', async (req, res) => {
         }
         
         // Generate the word search with positions
-        const { grid, placedWords } = generateWordSearch(processedWords);
+        const { grid, placedWords, wordPositions } = generateWordSearch(processedWords);
         
         // Generate unique base filename
         const timestamp = new Date().toISOString()
@@ -442,7 +442,7 @@ app.post('/api/generate/auto', async (req, res) => {
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, [], `..${puzzlePath}`, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
