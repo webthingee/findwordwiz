@@ -69,12 +69,13 @@
 </head>
 <body>
     <div class="container">
-        <h1>Word Input Form</h1>
+        <h1>Theme Input Form</h1>
         <div class="word-input">
-            <input type="text" id="wordInput" placeholder="Enter a word" maxlength="10">
+            <input type="text" id="wordInput" placeholder="Enter a theme (e.g., 'words related to space exploration')" maxlength="100">
             <button id="submitButton" onclick="submitWord()">Submit</button>
         </div>
         <div id="result" style="display: none;"></div>
+        <div><a href="http://localhost:3000">Restart</a></div>
     </div>
 
     <script>
@@ -89,14 +90,14 @@
         });
 
         async function submitWord() {
-            const word = wordInput.value.trim().toUpperCase();
-            if (!word) {
-                alert('Please enter a word!');
+            const theme = wordInput.value.trim();
+            if (!theme) {
+                alert('Please enter a theme!');
                 return;
             }
 
-            if (word.length > 10) {
-                alert('Word must be 10 characters or less!');
+            if (theme.length > 100) {
+                alert('Theme description must be 100 characters or less!');
                 return;
             }
 
@@ -106,13 +107,13 @@
             submitButton.textContent = 'Generating...';
 
             try {
-                const response = await fetch('http://localhost:5678/webhook/findwordwizpost', {
+                const response = await fetch('http://localhost:5678/webhook-test/findwordwizpost', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        word: word
+                        theme: theme
                     })
                 });
 
@@ -133,7 +134,7 @@
                     wordInput.value = '';
                 } else {
                     result.className = 'error';
-                    result.innerHTML = `Error: ${data.error || 'Failed to submit word'}`;
+                    result.innerHTML = `Error: ${data.error || 'Failed to submit theme'}`;
                 }
                 result.style.display = 'block';
             } catch (error) {
