@@ -1,29 +1,64 @@
 # FindWordWiz
 
-A web application that generates word search puzzles. You can either provide your own grid of letters and words, or let the application automatically generate a puzzle from your list of words.
+A modern web application that generates beautiful word search puzzles. Create engaging puzzles automatically from your word lists or design custom grids manually.
 
 ## Features
 
-- Generate word search puzzles automatically from a list of words
-- Support for up to 10 words per puzzle
-- Words can be placed horizontally, vertically, and diagonally
-- Each puzzle gets a unique URL for sharing
-- Print-friendly puzzle pages
-- RESTful API for integration with other applications
+- **Automatic Puzzle Generation**
+  - Generate word search puzzles from any list of words
+  - Smart word placement algorithm
+  - Support for up to 10 words per puzzle
+  - Words placed horizontally, vertically, and diagonally
+  - Random letter filling for empty spaces
+
+- **Manual Puzzle Creation**
+  - Create custom puzzles with your own grid layout
+  - Full control over letter placement
+  - Perfect for themed puzzles or specific layouts
+
+- **User-Friendly Interface**
+  - Modern, responsive design
+  - Dark theme with beautiful backgrounds
+  - Print-friendly layouts
+  - Copy-to-clipboard functionality
+  - Real-time validation and error feedback
+
+- **Puzzle Management**
+  - Unique URLs for each puzzle
+  - Solution view with highlighted words
+  - Print functionality for both puzzles and solutions
+  - Easy sharing capabilities
+
+- **API Integration**
+  - RESTful API for programmatic access
+  - CORS enabled for cross-origin requests
+  - Comprehensive error handling
+  - Input validation
 
 ## Setup
 
-1. Install dependencies:
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/findwordwiz.git
+cd findwordwiz
+```
+
+2. Install dependencies:
 ```bash
 npm install
 ```
 
-2. Start the server:
+3. Start the server:
 ```bash
 npm start
 ```
 
-The server will run at http://localhost:3000
+The application will be available at http://localhost:3000
+
+For development with auto-reload:
+```bash
+npm run dev
+```
 
 ## API Documentation
 
@@ -32,7 +67,7 @@ The server will run at http://localhost:3000
 POST /api/generate/auto
 ```
 
-Automatically generates a word search puzzle from a list of words. The application will place the words in random positions and directions, then fill the remaining spaces with random letters.
+Automatically generates a word search puzzle from a list of words.
 
 **Request Body:**
 ```json
@@ -46,19 +81,10 @@ Automatically generates a word search puzzle from a list of words. The applicati
 {
     "words": ["WORD1", "WORD2", "WORD3"],
     "grid": ["A", "B", "C", ...],
-    "puzzleUrl": "/generated/puzzle_2024-03-15_12-34-56-789.html",
-    "fullUrl": "http://localhost:3000/generated/puzzle_2024-03-15_12-34-56-789.html",
+    "puzzleUrl": "/generated/puzzle_[timestamp].html",
+    "fullUrl": "http://localhost:3000/generated/puzzle_[timestamp].html",
     "notPlaced": []
 }
-```
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:3000/api/generate/auto \
-  -H "Content-Type: application/json" \
-  -d '{
-    "words": ["REMOTE", "BINGE", "EPISODE"]
-  }'
 ```
 
 ### 2. Manual Puzzle Generation
@@ -66,7 +92,7 @@ curl -X POST http://localhost:3000/api/generate/auto \
 POST /api/generate
 ```
 
-Generates a puzzle using a provided grid and word list. Use this when you want complete control over the letter placement.
+Creates a puzzle using a provided grid and word list.
 
 **Request Body:**
 ```json
@@ -81,44 +107,33 @@ Generates a puzzle using a provided grid and word list. Use this when you want c
 {
     "words": ["WORD1", "WORD2", "WORD3"],
     "grid": ["A","B","C",...],
-    "puzzleUrl": "/generated/puzzle_2024-03-15_12-34-56-789.html",
-    "fullUrl": "http://localhost:3000/generated/puzzle_2024-03-15_12-34-56-789.html"
+    "puzzleUrl": "/generated/puzzle_[timestamp].html",
+    "fullUrl": "http://localhost:3000/generated/puzzle_[timestamp].html"
 }
-```
-
-**Example Request:**
-```bash
-curl -X POST http://localhost:3000/api/generate \
-  -H "Content-Type: application/json" \
-  -d '{
-    "words": ["REMOTE", "BINGE", "EPISODE"],
-    "grid": ["R","E","M","O","T","E","B","I","N","G","E","P","I","S","O","D","E",...] // 100 letters total
-  }'
 ```
 
 ### Validation Rules
 
-Both endpoints enforce the following rules:
-
-1. Word List Validation:
+1. Word List Requirements:
    - Must be an array of strings
-   - Must contain between 1 and 10 words
-   - Empty arrays are not allowed
+   - 1-10 words allowed
+   - No empty arrays
    - All words must be strings
+   - Maximum word length must fit within the 10x10 grid
 
-2. Grid Validation (for `/api/generate`):
+2. Grid Requirements (for manual generation):
    - Must be an array of exactly 100 letters
    - Each element must be a single letter
-   - Empty or invalid grids will be rejected
+   - No empty or invalid grids allowed
 
-3. General:
+3. General Rules:
    - All input is converted to uppercase
-   - Special characters and spaces in words are not supported
-   - Maximum word length should fit within the 10x10 grid
+   - Special characters and spaces not supported
+   - Grid size is fixed at 10x10
 
 ### Error Responses
 
-The API returns a 400 status code with an error message for invalid inputs:
+The API returns appropriate error messages with 400 status code:
 
 ```json
 {
@@ -136,19 +151,47 @@ Common error messages:
 
 ## Web Interface
 
-A user-friendly web interface is available at http://localhost:3000 where you can:
-1. Enter words for automatic puzzle generation
-2. View the generated puzzle
-3. Print the puzzle in a clean, formatted layout
-4. Share the puzzle via a unique URL
-5. Create new puzzles with a single click
+The web interface at http://localhost:3000 provides:
+
+1. **Puzzle Generation**
+   - Input section for words and grid
+   - Sample inputs with copy functionality
+   - Real-time validation
+   - Error feedback
+
+2. **Puzzle Display**
+   - Clean, readable grid layout
+   - Word list display
+   - Print functionality
+   - Solution view access
+
+3. **Solution View**
+   - Highlighted word locations
+   - Print-friendly layout
+   - Easy navigation back to puzzle
 
 ## Development
 
-Run the server in development mode with auto-reload:
-```bash
-npm run dev
+### Project Structure
 ```
+findwordwiz/
+├── public/
+│   ├── index.html (main interface)
+│   ├── templates/
+│   │   ├── puzzle.html
+│   │   ├── solution.html
+│   │   └── formexample.html
+│   └── images/
+├── server.js
+├── package.json
+└── README.md
+```
+
+### Dependencies
+- express: ^4.18.3
+- cors: ^2.8.5
+- open: ^10.1.0
+- nodemon: ^3.1.0 (dev)
 
 ## Requirements
 
