@@ -6,13 +6,13 @@
     <title>Word Search Generator on Local Server</title>
     <!-- This form is specifically for the n8n workflow that triggers the auto-generate path -->
     <style>
-        body {
+        /* body1 {
             font-family: Arial, sans-serif;
             max-width: 800px;
             margin: 0 auto;
             padding: 20px;
             background-color: #f5f5f5;
-        }
+        } */
         .container {
             background-color: white;
             padding: 20px;
@@ -67,7 +67,7 @@
         }
     </style>
 </head>
-<body>
+<body1>
     <div class="container">
         <h1>Theme Input Form</h1>
         <div class="word-input">
@@ -75,7 +75,7 @@
             <button id="submitButton" onclick="submitWord()">Submit</button>
         </div>
         <div id="result" style="display: none;"></div>
-        <div><a href="http://localhost:3000">Restart</a></div>
+        <div><button href=".">Restart</button></div>
     </div>
 
     <script>
@@ -150,5 +150,5 @@
             }
         }
     </script>
-</body>
+</body1>
 </html> 

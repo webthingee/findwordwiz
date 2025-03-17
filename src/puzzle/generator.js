@@ -47,9 +47,7 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
         
         // If cell is empty or matches the letter we want to place, it's valid
         if (currentCell === '' || currentCell === word[i]) {
-            if (currentCell === '') {
-                positionsToFill.push([newRow, newCol, word[i]]);
-            }
+            positionsToFill.push([newRow, newCol, word[i]]);
             continue;
         } else {
             return false;
@@ -57,7 +55,7 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
     }
     
     // If we get here, we can place the word
-    // Fill in all the new positions
+    // Fill in all positions, even if they already have matching letters
     positionsToFill.forEach(([r, c, letter]) => {
         grid[r][c] = letter;
     });
@@ -74,15 +72,24 @@ function canPlaceWord(grid, word, row, col, dRow, dCol) {
  * Attempts to place a word in the grid
  * @param {Array<Array<string>>} grid - The current grid
  * @param {string} word - The word to place
+ * @param {boolean} requireDiagonal - Whether to only use diagonal directions
  * @returns {Object} Result of placement attempt
  */
-function placeWord(grid, word) {
+function placeWord(grid, word, requireDiagonal = false) {
     const size = grid.length;
-    const directions = [
+    const diagonalDirections = [
+        [-1, -1], [-1, 1],  // Up-left, Up-right
+        [1, -1],  [1, 1]    // Down-left, Down-right
+    ];
+    
+    const allDirections = [
         [-1, -1], [-1, 0], [-1, 1],  // Up-left, Up, Up-right
         [0, -1],           [0, 1],    // Left, Right
         [1, -1],  [1, 0],  [1, 1]     // Down-left, Down, Down-right
     ];
+    
+    // Use diagonal directions only if required
+    const directions = requireDiagonal ? diagonalDirections : allDirections;
     
     // Try 100 random positions for better chances
     for (let attempt = 0; attempt < 100; attempt++) {
@@ -127,13 +134,25 @@ function generateWordSearch(words) {
     const grid = createEmptyGrid();
     const placedWords = [];
     const wordPositions = [];
+    let hasDiagonalWord = false;
     
     // Try to place each word
-    for (const word of sortedWords) {
-        const result = placeWord(grid, word);
+    for (let i = 0; i < sortedWords.length; i++) {
+        const word = sortedWords[i];
+        // If we haven't placed a diagonal word yet and this is the last word,
+        // force it to be diagonal
+        const requireDiagonal = !hasDiagonalWord && i === sortedWords.length - 1;
+        
+        const result = placeWord(grid, word, requireDiagonal);
         if (result.placed) {
             placedWords.push(word);
             wordPositions.push(result.position);
+            
+            // Check if this word is diagonal
+            const [dRow, dCol] = result.position.direction;
+            if (dRow !== 0 && dCol !== 0) {
+                hasDiagonalWord = true;
+            }
         }
     }
     
