@@ -482,6 +482,9 @@ app.post('/api/generate/auto', async (req, res) => {
 
         // Return the response
         return res.json({
+            success: true,
+            message: `Puzzle generated successfully! You can access it at: ${puzzleUrl}`,
+            puzzleUrl: puzzleUrl,
             words: placedWords,
             grid: grid,
             puzzleUrl: puzzlePath,
