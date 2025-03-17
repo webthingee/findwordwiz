@@ -1,0 +1,139 @@
+{
+  "name": "FindWordWiz_001",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://findwordwiz-production.up.railway.app/api/generate/auto",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "words",
+              "value": "={{ $('OpenAI').item.json.message.content.words }}"
+            },
+            {
+              "name": "backgroundUrl",
+              "value": "https://png.pngtree.com/thumb_back/fh260/background/20230927/pngtree-black-and-white-abstract-dots-illustration-a4-stationery-page-border-image_13370309.jpg"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ],
+      "id": "072d8628-e7f4-42d8-bed7-311d2d3ac28c",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "you will return 10 words, all with a length between 4-8 letters.\nuse all capital letters\nchoose words that have letters in common\nyou will be given a theme from which to find words",
+              "role": "assistant"
+            },
+            {
+              "content": "=find 10 words related to  {{ $json.body.word }}"
+            },
+            {
+              "content": "here is an example of how the json should be formatted\n[\n  {\n    \"words\": [\"REMOTE\", \"BINGE\", \"EPISODE\"]\n  }\n]"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        180,
+        0
+      ],
+      "id": "9e6aa88e-c906-4526-9bdb-c181cd185478",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "Eds8vdZTYFz3B7NQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "findwordwizpost",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "9d958f7a-aa1d-46be-8629-19a4c310794b",
+      "name": "Webhook",
+      "webhookId": "225d6ebc-6cfd-443d-bc15-0a0fedaaf3eb"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f16fac03-48bc-4b63-a242-2527cc408736",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "5086705b61c802198d655f61637f852875cb93d71cb42734b07999e9f152d273"
+  },
+  "id": "oZb4hpBk164MOsco",
+  "tags": [
+    {
+      "createdAt": "2025-03-17T16:27:47.242Z",
+      "updatedAt": "2025-03-17T16:27:47.242Z",
+      "id": "sSEejKRZ15WCqlgZ",
+      "name": "OpenAI"
+    },
+    {
+      "createdAt": "2025-03-17T16:28:03.392Z",
+      "updatedAt": "2025-03-17T16:28:03.392Z",
+      "id": "wvbaWS753rxsk8gs",
+      "name": "Railway"
+    }
+  ]
+}

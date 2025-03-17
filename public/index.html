@@ -3,285 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Search Generator</title>
+    <title>Word Search Generator on Local Server</title>
+    <!-- This form is specifically for the n8n workflow that triggers the auto-generate path -->
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            text-align: center; 
-            background-image: url('https://source.unsplash.com/1600x900/?puzzle');
-            background-size: cover;
-            background-position: center;
-            color: white;
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
             padding: 20px;
+            background-color: #f5f5f5;
         }
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        .input-section, .output-section {
-            background: rgba(0, 0, 0, 0.8);
+            background-color: white;
             padding: 20px;
-            border-radius: 10px;
-            flex: 1;
-            min-width: 300px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        .grid { 
-            display: grid; 
-            grid-template-columns: repeat(10, 40px); 
-            grid-template-rows: repeat(10, 40px);
-            justify-content: center; 
-            gap: 2px; 
-            margin: 20px auto;
+        h1 {
+            color: #333;
+            text-align: center;
         }
-        .cell { 
-            width: 40px; 
-            height: 40px; 
-            border: 1px solid #444; 
-            text-align: center; 
-            font-size: 20px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background-color: rgba(255, 255, 255, 0.9);
-            color: black;
+        .word-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        .json-input {
-            width: 100%;
-            height: 150px;
-            margin: 10px 0;
-            padding: 10px;
-            font-family: monospace;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #444;
-            border-radius: 5px;
-        }
-        .button {
-            padding: 10px 20px;
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             font-size: 16px;
-            cursor: pointer;
-            background-color: #007BFF;
+            flex-grow: 1;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
             color: white;
             border: none;
-            border-radius: 5px;
-            margin: 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
         }
-        .button:hover {
-            background-color: #0056b3;
+        button:hover {
+            background-color: #45a049;
         }
-        .clues {
-            text-align: left;
-            display: inline-block;
-            padding: 10px;
-            border-radius: 8px;
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
         }
         .error {
-            color: #ff4444;
-            margin: 10px 0;
-            font-weight: bold;
-        }
-        .puzzle-link {
-            background: rgba(0, 255, 0, 0.1);
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            word-break: break-all;
-        }
-        .puzzle-link a {
-            color: #00ff00;
-            text-decoration: none;
-        }
-        .puzzle-link a:hover {
-            text-decoration: underline;
-        }
-        .sample-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 5px 0;
-        }
-        .sample {
-            font-size: 12px;
-            color: #aaa;
-            text-align: left;
-            flex-grow: 1;
-            font-family: monospace;
-            background: rgba(0, 0, 0, 0.3);
-            padding: 5px;
-            border-radius: 3px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .copy-button {
-            padding: 3px 8px;
-            font-size: 12px;
-            cursor: pointer;
-            background-color: #444;
-            color: white;
-            border: none;
-            border-radius: 3px;
-        }
-        .copy-button:hover {
-            background-color: #666;
-        }
-        .api-url {
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 5px;
-            font-family: monospace;
+            background-color: #f8d7da;
+            color: #721c24;
         }
     </style>
 </head>
 <body>
-    <h1>Word Search Generator</h1>
-    
-    <div class="api-url">
-        API Endpoint: <code>POST http://localhost:3000/api/generate</code>
-        <button class="copy-button" onclick="copyApiExample()">Copy API Example</button>
-    </div>
-    
     <div class="container">
-        <div class="input-section">
-            <h2>Input Words (JSON Array)</h2>
-            <div class="sample-container">
-                <div class="sample" id="wordsExample">["REMOTE", "BINGE", "EPISODE", "STREAM", "SCREEN"]</div>
-                <button class="copy-button" onclick="copyExample('wordsExample')">Copy</button>
-            </div>
-            <textarea id="wordsJson" class="json-input" placeholder='Enter words as JSON array: ["WORD1", "WORD2", "WORD3"]'></textarea>
-            
-            <h2>Input Grid Letters (JSON Array)</h2>
-            <div class="sample-container">
-                <div class="sample" id="gridExample">["R","E","M","O","T","E","S","T","R","S","E","C","R","E","E","N","B","I","N","G","E","P","I","S","O","D","E","A","M","X","T","V","W","Z","Y","Q","L","K","J","H","G","F","D","S","A","P","O","I","U","Y","T","R","E","W","Q","L","K","J","H","G","F","D","S","A","M","N","B","V","C","X","Z","P","O","I","U","Y","T","R","E","W","Q","A","S","D","F","G","H","J","K","L","P","O","I","U","Y","T","R","E","W","Q"]</div>
-                <button class="copy-button" onclick="copyExample('gridExample')">Copy</button>
-            </div>
-            <textarea id="gridJson" class="json-input" placeholder='Enter 100 letters as JSON array: ["A","B","C",...]'></textarea>
-            
-            <div id="errorMessage" class="error"></div>
-            <button class="button" onclick="generateWordSearch()">Generate Word Search</button>
+        <h1>Word Input Form</h1>
+        <div class="word-input">
+            <input type="text" id="wordInput" placeholder="Enter a word" maxlength="10">
+            <button id="submitButton" onclick="submitWord()">Submit</button>
         </div>
-        
-        <div class="output-section">
-            <h2>Generated Word Search</h2>
-            <div id="puzzleLink" class="puzzle-link" style="display: none;">
-                Puzzle URL: <a href="#" target="_blank"></a>
-                <button class="copy-button" onclick="copyPuzzleLink()">Copy Link</button>
-            </div>
-            <div class="grid" id="wordsearch"></div>
-            <div class="clues">
-                <h3>Find these words:</h3>
-                <ul id="wordList"></ul>
-            </div>
-            <button class="button" onclick="window.print()">Print</button>
-        </div>
+        <div id="result" style="display: none;"></div>
     </div>
 
     <script>
-        function copyExample(elementId) {
-            const text = document.getElementById(elementId).textContent;
-            navigator.clipboard.writeText(text).then(() => {
-                const button = event.target;
-                const originalText = button.textContent;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = originalText;
-                }, 1000);
-            });
-        }
+        const wordInput = document.getElementById('wordInput');
+        const submitButton = document.getElementById('submitButton');
+        const result = document.getElementById('result');
 
-        function copyApiExample() {
-            const apiExample = {
-                method: 'POST',
-                url: 'http://localhost:3000/api/generate',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: {
-                    words: ["REMOTE", "BINGE", "EPISODE"],
-                    grid: ["R","E","M","O","T","E","B","I","N","G","E","P","I","S","O","D","E"]
-                }
-            };
-            navigator.clipboard.writeText(JSON.stringify(apiExample, null, 2));
-            const button = event.target;
-            button.textContent = 'Copied!';
-            setTimeout(() => {
-                button.textContent = 'Copy API Example';
-            }, 1000);
-        }
+        wordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitWord();
+            }
+        });
 
-        async function generateWordSearch() {
-            const wordsJson = document.getElementById('wordsJson').value;
-            const gridJson = document.getElementById('gridJson').value;
-            const errorElement = document.getElementById('errorMessage');
-            const puzzleLinkDiv = document.getElementById('puzzleLink');
-            
+        async function submitWord() {
+            const word = wordInput.value.trim().toUpperCase();
+            if (!word) {
+                alert('Please enter a word!');
+                return;
+            }
+
+            if (word.length > 10) {
+                alert('Word must be 10 characters or less!');
+                return;
+            }
+
+            // Disable input and button during submission
+            wordInput.disabled = true;
+            submitButton.disabled = true;
+            submitButton.textContent = 'Generating...';
+
             try {
-                const words = JSON.parse(wordsJson);
-                const grid = JSON.parse(gridJson);
-
-                const response = await fetch('http://192.168.0.119:3000/api/generate', {
+                const response = await fetch('http://localhost:5678/webhook/findwordwizpost', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ words, grid })
+                    body: JSON.stringify({
+                        word: word
+                    })
                 });
 
                 const data = await response.json();
+                console.log('Server response:', data); // Debug log
                 
                 if (response.ok) {
-                    errorElement.textContent = '';
+                    result.className = 'success';
+    
+                    const puzzleUrl = data.url; // Use url from the response
+                    console.log('Puzzle URL:', puzzleUrl); // Debug log
+    
+                    result.innerHTML = `
+                        <p>Theme submitted successfully!</p>
+                        <p>Your puzzle is ready!</p>
+                        <button onclick="window.open('${puzzleUrl}', '_blank')" class="puzzle-button">Open Puzzle</button>`;
                     
-                    // Update puzzle link
-                    const puzzleUrl = `http://192.168.0.119:3000${data.puzzleUrl}`;
-                    puzzleLinkDiv.style.display = 'block';
-                    const linkElement = puzzleLinkDiv.querySelector('a');
-                    linkElement.href = puzzleUrl;
-                    linkElement.textContent = puzzleUrl;
-                    
-                    // Generate the word search display
-                    const wordsearch = document.getElementById('wordsearch');
-                    wordsearch.innerHTML = '';
-                    
-                    // Create the grid
-                    data.grid.forEach(letter => {
-                        const cell = document.createElement('div');
-                        cell.className = 'cell';
-                        cell.textContent = letter;
-                        wordsearch.appendChild(cell);
-                    });
-                    
-                    // Update the word list
-                    const wordList = document.getElementById('wordList');
-                    wordList.innerHTML = '';
-                    data.words.forEach(word => {
-                        const li = document.createElement('li');
-                        li.textContent = word;
-                        wordList.appendChild(li);
-                    });
+                    wordInput.value = '';
                 } else {
-                    errorElement.textContent = data.error || 'An error occurred';
-                    puzzleLinkDiv.style.display = 'none';
+                    result.className = 'error';
+                    result.innerHTML = `Error: ${data.error || 'Failed to submit word'}`;
                 }
+                result.style.display = 'block';
             } catch (error) {
-                errorElement.textContent = 'Invalid JSON format';
-                puzzleLinkDiv.style.display = 'none';
+                console.error('Error details:', error); // Debug log
+                result.className = 'error';
+                result.innerHTML = 'Error: Failed to connect to the server';
+                result.style.display = 'block';
+            } finally {
+                // Re-enable input and button after completion
+                wordInput.disabled = false;
+                submitButton.disabled = false;
+                submitButton.textContent = 'Submit';
             }
-        }
-
-        function copyPuzzleLink() {
-            const link = document.querySelector('#puzzleLink a').href;
-            navigator.clipboard.writeText(link).then(() => {
-                const button = event.target;
-                button.textContent = 'Copied!';
-                setTimeout(() => {
-                    button.textContent = 'Copy Link';
-                }, 1000);
-            });
         }
     </script>
 </body>
