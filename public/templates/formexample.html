@@ -1,9 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Input Form</title>
+<title>Word Input Form</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -42,14 +37,9 @@
             border-radius: 4px;
             cursor: pointer;
             font-size: 16px;
-            transition: background-color 0.3s;
         }
         button:hover {
             background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
         }
         #result {
             margin-top: 20px;
@@ -64,44 +54,30 @@
             background-color: #f8d7da;
             color: #721c24;
         }
-        .puzzle-button {
-            margin-top: 10px;
-            background-color: #007bff;
-        }
-        .puzzle-button:hover {
-            background-color: #0056b3;
-        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Word Input Form</h1>
-        <form id="wordForm" onsubmit="submitWord(event)">
-            <div class="word-input">
-                <input 
-                    type="text" 
-                    id="wordInput" 
-                    name="word"
-                    placeholder="Enter a word" 
-                    maxlength="10"
-                    required
-                >
-                <button type="submit" id="submitButton">Submit</button>
-            </div>
-        </form>
+        <div class="word-input">
+            <input type="text" id="wordInput" placeholder="Enter a word" maxlength="10">
+            <button onclick="submitWord()">Submit</button>
+        </div>
         <div id="result" style="display: none;"></div>
     </div>
 
     <script>
-        const wordForm = document.getElementById('wordForm');
         const wordInput = document.getElementById('wordInput');
-        const submitButton = document.getElementById('submitButton');
         const result = document.getElementById('result');
 
-        async function submitWord(event) {
-            event.preventDefault();
-            const word = wordInput.value.trim().toUpperCase();
+        wordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                submitWord();
+            }
+        });
 
+        async function submitWord() {
+            const word = wordInput.value.trim().toUpperCase();
             if (!word) {
                 alert('Please enter a word!');
                 return;
@@ -112,31 +88,29 @@
                 return;
             }
 
-            // Disable button and input during submission
-            submitButton.disabled = true;
-            wordInput.disabled = true;
-            submitButton.textContent = 'Generating...';
-
             try {
-                const response = await fetch('http://localhost:5678/webhook/findwordwizgo', {
+                const response = await fetch('http://localhost:5678/webhook-test/findwordwizgo', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ word })
+                    body: JSON.stringify({
+                        word: word
+                    })
                 });
 
                 const data = await response.json();
                 
                 if (response.ok) {
                     result.className = 'success';
+    
+                    const puzzleUrl = data.fullPuzzleUrl; // Adjust the path as needed
+    
                     result.innerHTML = `
-                        <p>Word submitted successfully!</p>
+                        <p>Theme submitted successfully!</p>
                         <p>Your puzzle is ready!</p>
-                        <button onclick="window.open('${data.fullPuzzleUrl}', '_blank')" class="puzzle-button">
-                            Open Puzzle
-                        </button>
-                    `;
+                        <button onclick="window.open('${puzzleUrl}', '_blank')" class="puzzle-button">Open Puzzle</button>`;
+                    
                     wordInput.value = '';
                 } else {
                     result.className = 'error';
@@ -145,15 +119,8 @@
                 result.style.display = 'block';
             } catch (error) {
                 result.className = 'error';
-                result.innerHTML = 'Error: Failed to connect to the server';
+                result.innerHTML = 'Error: Failed to connect to the test endpoint';
                 result.style.display = 'block';
-            } finally {
-                // Re-enable button and input after completion
-                submitButton.disabled = false;
-                wordInput.disabled = false;
-                submitButton.textContent = 'Submit';
             }
         }
     </script>
-</body>
-</html>

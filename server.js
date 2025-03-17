@@ -255,7 +255,7 @@ function cleanUrl(url) {
 // API endpoint to generate word search
 app.post('/api/generate', (req, res) => {
     try {
-        const { words, grid, openInBrowser = false } = req.body;
+        const { words, grid } = req.body;
         
         // Log incoming request for debugging
         console.log('Received request:', {
@@ -334,11 +334,6 @@ app.post('/api/generate', (req, res) => {
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
 
-        // Open in browser if requested
-        if (openInBrowser) {
-            openUrlInBrowser(puzzleUrl);
-        }
-
         // Log successful response
         console.log('Generated puzzle:', JSON.stringify({
             timestamp: new Date().toISOString(),
@@ -368,28 +363,16 @@ app.post('/api/generate', (req, res) => {
     }
 });
 
-// Function to safely open URL in browser
-async function openUrlInBrowser(url) {
-    try {
-        const open = await import('open');
-        await open.default(url);
-        console.log('Opened in browser:', url);
-    } catch (error) {
-        console.error('Failed to open in browser:', error);
-    }
-}
-
 // New endpoint to generate word search from words only
 app.post('/api/generate/auto', async (req, res) => {
     try {
-        const { words, openInBrowser = false, backgroundUrl = null } = req.body;
+        const { words, backgroundUrl = null } = req.body;
         const GRID_SIZE = 10;
         
         // Log incoming request
         console.log('Received auto-generate request:', {
             timestamp: new Date().toISOString(),
             words,
-            openInBrowser,
             backgroundUrl
         });
         
@@ -423,7 +406,7 @@ app.post('/api/generate/auto', async (req, res) => {
         }
         
         // Generate the word search with positions
-        const { grid, placedWords, wordPositions } = generateWordSearch(processedWords);
+        const { grid, placedWords } = generateWordSearch(processedWords);
         
         // Generate unique base filename
         const timestamp = new Date().toISOString()
@@ -459,15 +442,10 @@ app.post('/api/generate/auto', async (req, res) => {
 
         // Generate and save both HTML files with background if provided
         const puzzleHtml = generatePuzzleHTML(placedWords, grid, solutionUrl, backgroundUrl);
-        const solutionHtml = generateSolutionHTML(placedWords, grid, wordPositions, `..${puzzlePath}`, backgroundUrl);
+        const solutionHtml = generateSolutionHTML(placedWords, grid, [], `..${puzzlePath}`, backgroundUrl);
         
         fs.writeFileSync(puzzleFilepath, puzzleHtml);
         fs.writeFileSync(solutionFilepath, solutionHtml);
-
-        // Open in browser if requested
-        if (openInBrowser) {
-            await openUrlInBrowser(puzzleUrl);
-        }
 
         // Log successful response
         console.log('Generated auto puzzle:', JSON.stringify({
@@ -476,8 +454,7 @@ app.post('/api/generate/auto', async (req, res) => {
             solutionFilename,
             puzzleUrl,
             solutionUrl,
-            placedWords,
-            openedInBrowser: Boolean(openInBrowser)
+            placedWords
         }));
 
         // Return the response
