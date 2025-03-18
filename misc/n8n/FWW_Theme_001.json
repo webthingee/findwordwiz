@@ -1,0 +1,139 @@
+{
+  "name": "FWW-Theme_001",
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://192.168.0.87:3000/api/generate/auto",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "words",
+              "value": "={{ $('OpenAI').item.json.message.content.words }}"
+            },
+            {
+              "name": "backgroundUrl",
+              "value": "https://png.pngtree.com/thumb_back/fh260/background/20230927/pngtree-black-and-white-abstract-dots-illustration-a4-stationery-page-border-image_13370309.jpg"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        0
+      ],
+      "id": "5da5c4d9-3b9d-4eb7-ab74-9ac07d346845",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "you will return 10 words, all with a length between 4-8 letters.\nuse all capital letters\nchoose words that have letters in common\nyou will be given a theme from which to find words",
+              "role": "assistant"
+            },
+            {
+              "content": "=find 10 words related to {{ $json.body.theme }}, the words should be gradeschool level"
+            },
+            {
+              "content": "here is an example of how the json should be formatted\n[\n  {\n    \"words\": [\"REMOTE\", \"BINGE\", \"EPISODE\"]\n  }\n]"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        180,
+        0
+      ],
+      "id": "735dcb04-26dc-4372-8f7b-a3a65146a5e0",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "ObEEWK8Eho7bVg00",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "findwordwizpost",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        20,
+        0
+      ],
+      "id": "c0e86db4-a655-4ea0-818c-ef690aa6c7ef",
+      "name": "Webhook",
+      "webhookId": "225d6ebc-6cfd-443d-bc15-0a0fedaaf3eb"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "93a7c9ae-3a39-4e6d-b6af-7e7442aa4172",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "371d23851b786f462a8e591843dd3b8c5ae5f2a835d87a8c5e989dde71245dd2"
+  },
+  "id": "dAe7w9twxl3QqCRo",
+  "tags": [
+    {
+      "name": "OpenAI",
+      "id": "8Fv9oxsVVPpyo0Jg",
+      "createdAt": "2025-03-17T21:11:22.837Z",
+      "updatedAt": "2025-03-17T21:11:22.837Z"
+    },
+    {
+      "name": "Railway",
+      "id": "R7W1ouiJTSkasXwi",
+      "createdAt": "2025-03-17T21:11:22.856Z",
+      "updatedAt": "2025-03-17T21:11:22.856Z"
+    }
+  ]
+}
