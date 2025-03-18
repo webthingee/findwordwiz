@@ -3,19 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Word Search Puzzle</title>
+    <title>{{TITLE}}</title>
     <style>
         body { 
             font-family: Arial, sans-serif; 
             text-align: center;
-            background-image: url('/images/test.jpg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
             color: white;
-            padding: 20px;
+            padding: 0;
             min-height: 100vh;
             margin: 0;
+            position: relative;
+        }
+        .background-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: url('{{BACKGROUND_URL}}');
+            background-size: cover;
+            background-position: center;
+            z-index: -1;
+        }
+        .content-wrapper {
+            padding: 20px;
+        }
+        h1 {
+            display: inline-block;
+            padding: 15px 30px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            margin: 20px;
+            color: white;
         }
         .grid { 
             display: grid; 
@@ -25,8 +44,10 @@
             gap: 2px; 
             margin: 20px auto;
             background: rgba(255, 255, 255, 0.1);
-            padding: 20px;
+            padding: 0 20px;
             border-radius: 10px;
+            width: 420px; /* 10 cells * 40px + 9 gaps * 2px + 40px padding */
+            box-sizing: border-box;
         }
         .cell { 
             width: 40px; 
@@ -37,7 +58,7 @@
             display: flex; 
             align-items: center; 
             justify-content: center;
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: white;
             color: black;
         }
         .clues {
@@ -72,6 +93,9 @@
             border: none;
             border-radius: 5px;
             margin: 10px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
         .button:hover {
             background-color: #0056b3;
@@ -81,10 +105,20 @@
                 display: none;
             }
             body {
-                background: white;
                 color: black;
             }
+            .background-wrapper {
+                position: fixed;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                color-adjust: exact !important;
+            }
             .clues {
+                background: white;
+                color: black;
+                border: 1px solid #444;
+            }
+            h1 {
                 background: white;
                 color: black;
                 border: 1px solid #444;
@@ -93,17 +127,20 @@
     </style>
 </head>
 <body>
-    <h1>Word Search Puzzle</h1>
-    <div class="grid">
-        {{GRID_CELLS}}
+    <div class="background-wrapper"></div>
+    <div class="content-wrapper">
+        <h1>{{TITLE}}</h1>
+        <div class="grid">
+            {{GRID_CELLS}}
+        </div>
+        <div class="clues">
+            <h3>Find these words:</h3>
+            <ul>
+                {{WORD_LIST}}
+            </ul>
+        </div>
+        <button class="button no-print" onclick="window.print()">Print</button>
+        <p class="no-print"><a href="{{SOLUTION_URL}}" style="color: #007BFF; text-decoration: none;">View Solution</a></p>
     </div>
-    <div class="clues">
-        <h3>Find these words:</h3>
-        <ul>
-            {{WORD_LIST}}
-        </ul>
-    </div>
-    <button class="button no-print" onclick="window.print()">Print</button>
-    <p class="no-print"><a href="{{SOLUTION_URL}}" style="color: #007BFF; text-decoration: none;">View Solution</a></p>
 </body>
 </html> 

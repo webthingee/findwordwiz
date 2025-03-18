@@ -33,23 +33,19 @@ loadTemplates();
  * @param {string[]} data.grid - Grid of letters
  * @param {string} solutionUrl - URL to the solution page
  * @param {string} [backgroundUrl] - Optional background image URL
+ * @param {string} [title] - Optional title for the puzzle
  * @returns {string} Generated HTML
  */
-function generatePuzzleHTML(data, solutionUrl, backgroundUrl = null) {
+function generatePuzzleHTML(data, solutionUrl, backgroundUrl = '/images/test.jpg', title = 'Find Word Wiz') {
     const gridCells = data.grid.map(letter => `<div class="cell">${letter}</div>`).join('');
     const wordList = data.words.map(word => `<li>${word}</li>`).join('');
     
     let html = templates.puzzle
         .replace('{{GRID_CELLS}}', gridCells)
         .replace('{{WORD_LIST}}', wordList)
-        .replace('{{SOLUTION_URL}}', solutionUrl);
-    
-    if (backgroundUrl) {
-        html = html.replace(
-            /background-image: url\('[^']*'\);/,
-            `background-image: url('${backgroundUrl}');`
-        );
-    }
+        .replace('{{SOLUTION_URL}}', solutionUrl)
+        .replace(/{{TITLE}}/g, title)
+        .replace('{{BACKGROUND_URL}}', backgroundUrl);
     
     return html;
 }
@@ -62,9 +58,10 @@ function generatePuzzleHTML(data, solutionUrl, backgroundUrl = null) {
  * @param {Array} data.wordPositions - Array of word positions and directions
  * @param {string} puzzlePath - Path back to the puzzle
  * @param {string} [backgroundUrl] - Optional background image URL
+ * @param {string} [title] - Optional title for the puzzle
  * @returns {string} Generated HTML
  */
-function generateSolutionHTML(data, puzzlePath, backgroundUrl = null) {
+function generateSolutionHTML(data, puzzlePath, backgroundUrl = '/images/test.jpg', title = 'Find Word Wiz') {
     const gridCells = data.grid.map((letter, i) => {
         const row = Math.floor(i / 10);
         const col = i % 10;
@@ -101,14 +98,9 @@ function generateSolutionHTML(data, puzzlePath, backgroundUrl = null) {
     let html = templates.solution
         .replace('{{GRID_CELLS}}', gridCells)
         .replace('{{WORD_LIST}}', wordList)
-        .replace('{{PUZZLE_URL}}', puzzlePath);
-    
-    if (backgroundUrl) {
-        html = html.replace(
-            'background-image: url(\'/images/test.jpg\');',
-            `background-image: url('${backgroundUrl}');`
-        );
-    }
+        .replace('{{PUZZLE_URL}}', puzzlePath)
+        .replace(/{{TITLE}}/g, title)
+        .replace('{{BACKGROUND_URL}}', backgroundUrl);
     
     return html;
 }

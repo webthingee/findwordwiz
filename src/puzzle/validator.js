@@ -108,6 +108,22 @@ function validatePuzzleRequest(request) {
             }
         }
 
+        // If title is provided, validate it
+        if (request.title && typeof request.title !== 'string') {
+            return {
+                isValid: false,
+                error: "Title must be a string"
+            };
+        }
+
+        // If backgroundUrl is provided, validate it
+        if (request.backgroundUrl && typeof request.backgroundUrl !== 'string') {
+            return {
+                isValid: false,
+                error: "Background URL must be a string"
+            };
+        }
+
         return { isValid: true };
     } catch (error) {
         return {

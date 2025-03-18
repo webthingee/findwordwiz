@@ -42,7 +42,7 @@ router.post('/generate/auto', (req, res) => {
         return res.status(400).json({ error: validation.error });
     }
 
-    const { words } = req.body;
+    const { words, title, backgroundUrl } = req.body;
     const puzzleData = generateWordSearch(words);
 
     const puzzleFilename = generateUniqueFilename();
@@ -60,7 +60,7 @@ router.post('/generate/auto', (req, res) => {
         words: puzzleData.placedWords,
         grid: puzzleData.grid,
         wordPositions: puzzleData.wordPositions
-    }, solutionUrl);
+    }, solutionUrl, backgroundUrl || '/images/test.jpg', title);
     fs.writeFileSync(puzzlePath, puzzleHtml);
 
     // Generate and save solution HTML
@@ -68,7 +68,7 @@ router.post('/generate/auto', (req, res) => {
         words: puzzleData.placedWords,
         grid: puzzleData.grid,
         wordPositions: puzzleData.wordPositions
-    }, puzzleUrl);
+    }, puzzleUrl, backgroundUrl || '/images/test.jpg', title);
     fs.writeFileSync(solutionPath, solutionHtml);
 
     // Return a JSON object with the URL
@@ -85,7 +85,7 @@ router.post('/generate', (req, res) => {
         return res.status(400).json({ error: validation.error });
     }
 
-    const { words, grid } = req.body;
+    const { words, grid, title, backgroundUrl } = req.body;
     const puzzleData = {
         words,
         grid,
@@ -103,11 +103,11 @@ router.post('/generate', (req, res) => {
     const fullUrl = `${req.protocol}://${req.get('host')}${puzzleUrl}`;
 
     // Generate and save puzzle HTML
-    const puzzleHtml = generatePuzzleHTML(puzzleData, solutionUrl);
+    const puzzleHtml = generatePuzzleHTML(puzzleData, solutionUrl, backgroundUrl || '/images/test.jpg', title);
     fs.writeFileSync(puzzlePath, puzzleHtml);
 
     // Generate and save solution HTML
-    const solutionHtml = generateSolutionHTML(puzzleData, puzzleUrl);
+    const solutionHtml = generateSolutionHTML(puzzleData, puzzleUrl, backgroundUrl || '/images/test.jpg', title);
     fs.writeFileSync(solutionPath, solutionHtml);
 
     // Return a JSON object with the URL
